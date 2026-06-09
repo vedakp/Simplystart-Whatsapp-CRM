@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Plus, Loader2, ArrowRight, MessageSquare, Check, X } from 'lucide-react';
+import { ShoppingCart, Plus, Loader2, ArrowRight, MessageSquare, Check, X, Trash2 } from 'lucide-react';
 import { cn } from '../utils';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -85,6 +85,19 @@ export default function Orders() {
     }
   };
 
+  const deleteOrder = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this order?")) return;
+    
+    try {
+      await fetch(`/api/orders/${id}`, {
+        method: 'DELETE'
+      });
+      await fetchOrders();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleUpdateStatus = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingOrder) return;
@@ -167,16 +180,25 @@ export default function Orders() {
                       </span>
                     </td>
                     <td className="py-5 text-right pr-2">
-                       <button
-                        onClick={() => {
-                          setEditingOrder(order);
-                          setNewStatus(order.status);
-                          setSendUpdateMsg(true);
-                        }}
-                        className="text-slate-900 dark:text-white border border-slate-300 dark:border-white/20 rounded-full px-4 py-1.5 text-[10px] hover:bg-slate-200 dark:bg-white/10 transition-colors uppercase tracking-widest font-semibold"
-                      >
-                        Update
-                      </button>
+                       <div className="flex items-center justify-end space-x-2">
+                         <button
+                          onClick={() => {
+                            setEditingOrder(order);
+                            setNewStatus(order.status);
+                            setSendUpdateMsg(true);
+                          }}
+                          className="text-slate-900 dark:text-white border border-slate-300 dark:border-white/20 rounded-full px-4 py-1.5 text-[10px] hover:bg-slate-200 dark:bg-white/10 transition-colors uppercase tracking-widest font-semibold"
+                        >
+                          Update
+                        </button>
+                        <button
+                          onClick={() => deleteOrder(order.id)}
+                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
+                          title="Delete order"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                       </div>
                     </td>
                   </tr>
                 ))}

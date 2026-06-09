@@ -74,6 +74,18 @@ export async function connectDB(config: any) {
       updatedAt: DataTypes.STRING
     });
     
+    models.Appointment = sequelize.define('Appointment', {
+      id: { type: DataTypes.STRING, primaryKey: true },
+      title: DataTypes.STRING,
+      contactName: DataTypes.STRING,
+      contactPhone: DataTypes.STRING,
+      startTime: DataTypes.STRING,
+      endTime: DataTypes.STRING,
+      status: DataTypes.STRING,
+      notes: DataTypes.TEXT,
+      createdAt: DataTypes.STRING
+    });
+    
     // Not explicitly mentioned but good for Campaigns mapping
     models.Group = sequelize.define('Group', {
       id: { type: DataTypes.STRING, primaryKey: true },
@@ -94,6 +106,7 @@ export async function connectDB(config: any) {
     models.Note = null;
     models.Setting = null;
     models.Group = null;
+    models.Appointment = null;
     sequelize = null;
     return { success: false, message: error.message };
   }

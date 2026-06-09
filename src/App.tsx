@@ -8,6 +8,7 @@ import Chats from './pages/Chats';
 import Leads from './pages/Leads';
 import Notes from './pages/Notes';
 import Settings from './pages/Settings';
+import Appointments from './pages/Appointments';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="chats" element={<Chats />} />
           <Route path="contacts" element={<Contacts />} />
           <Route path="campaigns" element={<Campaigns />} />
+          <Route path="appointments" element={<Appointments />} />
           <Route path="orders" element={<Orders />} />
           <Route path="leads" element={<Leads />} />
           <Route path="notes" element={<Notes />} />

@@ -78,6 +78,8 @@ let orders = [
   }
 ];
 
+let appointments: any[] = [];
+
 import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
 import QRCode from 'qrcode';
 import pino from 'pino';
@@ -596,6 +598,104 @@ async function startServer() {
     }
 
     res.json(order);
+  });
+
+  app.delete("/api/orders/:id", async (req, res) => {
+    const orderId = req.params.id;
+    try {
+      if (isDBConnected()) {
+        const order = await models.Order.findByPk(orderId);
+        if (!order) return res.status(404).json({ error: "Order not found" });
+        await order.destroy();
+        return res.json({ success: true });
+      }
+      const idx = orders.findIndex(o => o.id === orderId);
+      if (idx === -1) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      orders.splice(idx, 1);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      res.status(500).json({ error: "Failed to delete order" });
+    }
+  });
+
+  // 4a. Appointments
+  app.get("/api/appointments", async (req, res) => {
+    try {
+      if (isDBConnected() && models.Appointment) {
+        const dbAppointments = await models.Appointment.findAll();
+        return res.json(dbAppointments.map((a: any) => a.toJSON()));
+      }
+      res.json(appointments);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to fetch appointments" });
+    }
+  });
+
+  app.post("/api/appointments", async (req, res) => {
+    try {
+      const appt = {
+        id: "APT-" + Date.now(),
+        ...req.body,
+        createdAt: new Date().toISOString()
+      };
+      if (isDBConnected() && models.Appointment) {
+        await models.Appointment.create(appt);
+      } else {
+        appointments.push(appt);
+      }
+      
+      // WhatsApp notification
+      if (sock) {
+         try {
+           const [result] = await sock.onWhatsApp(appt.contactPhone);
+           if (result) {
+             const message = `Hello ${appt.contactName},\nYour appointment for "${appt.title}" has been scheduled from ${new Date(appt.startTime).toLocaleString()} to ${new Date(appt.endTime).toLocaleString()}.\nNotes: ${appt.notes || "None"}`;
+             await sock.sendMessage(result.jid, { text: message });
+           }
+         } catch(e) {}
+      }
+
+      res.json(appt);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to create appointment" });
+    }
+  });
+
+  app.put("/api/appointments/:id", async (req, res) => {
+    try {
+      if (isDBConnected() && models.Appointment) {
+        const appt = await models.Appointment.findByPk(req.params.id);
+        if (appt) {
+          await appt.update(req.body);
+          return res.json(appt.toJSON());
+        }
+      }
+      const idx = appointments.findIndex(a => a.id === req.params.id);
+      if (idx !== -1) {
+        appointments[idx] = { ...appointments[idx], ...req.body };
+        return res.json(appointments[idx]);
+      }
+      res.status(404).json({ error: "Not found" });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to update" });
+    }
+  });
+
+  app.delete("/api/appointments/:id", async (req, res) => {
+    try {
+      if (isDBConnected() && models.Appointment) {
+        const appt = await models.Appointment.findByPk(req.params.id);
+        if (appt) await appt.destroy();
+      } else {
+        appointments = appointments.filter(a => a.id !== req.params.id);
+      }
+      res.json({ success: true });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to delete" });
+    }
   });
 
   // 5. Leads
