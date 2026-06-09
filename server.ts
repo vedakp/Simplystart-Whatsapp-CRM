@@ -288,8 +288,8 @@ async function connectToWhatsApp() {
     }
   });
 
-  // Deep sync historical contacts on connect
-  sock.ev.on('messaging-history.set', async ({ contacts: newContacts }: any) => {
+  // Deep sync historical contacts and messages on connect
+  sock.ev.on('messaging-history.set', async ({ contacts: newContacts, chats: newChats, messages: historyMessages }: any) => {
     if (newContacts && newContacts.length > 0) {
       for (const c of newContacts) {
         if (!c.id.includes('@g.us') && !c.id.includes('@newsletter')) {
@@ -324,6 +324,22 @@ async function connectToWhatsApp() {
           }
         }
       }
+    }
+
+    if (historyMessages && historyMessages.length > 0) {
+       for (const msg of historyMessages) {
+          if (!msg.message) continue;
+          const jid = msg.key.remoteJid;
+          if (!jid || jid === 'status@broadcast') continue;
+          
+          if (!chatMessages[jid]) chatMessages[jid] = [];
+          const text = msg.message.conversation || msg.message.extendedTextMessage?.text || "[Media/Other]";
+          if (msg.key.fromMe) {
+             chatMessages[jid].push({ text, fromMe: true, timestamp: new Date(msg.messageTimestamp * 1000).toISOString() });
+          } else {
+             chatMessages[jid].push({ text, fromMe: false, timestamp: new Date(msg.messageTimestamp * 1000).toISOString() });
+          }
+       }
     }
   });
 

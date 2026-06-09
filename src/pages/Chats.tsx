@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, Loader2, ShoppingCart, User } from 'lucide-react';
+import { MessageCircle, Send, Loader2, ShoppingCart, User, RefreshCw } from 'lucide-react';
 import { cn } from '../utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -81,11 +81,18 @@ export default function Chats() {
     <div className="h-[calc(100vh-140px)] flex flex-col md:flex-row gap-6">
       {/* Sidebar - Chat List */}
       <div className="w-full md:w-80 flex flex-col bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden shrink-0">
-        <div className="p-5 border-b border-slate-200 dark:border-white/5">
+        <div className="p-5 border-b border-slate-200 dark:border-white/5 flex justify-between items-center">
           <h2 className="font-bold tracking-tight text-lg text-slate-900 dark:text-white flex items-center">
             <MessageCircle className="w-5 h-5 mr-3 text-primary-500" />
             Live Chats
           </h2>
+          <button
+            onClick={fetchChats}
+            className="flex items-center px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors"
+          >
+            <RefreshCw className={cn("w-3.5 h-3.5 mr-1.5", loadingChats && "animate-spin")} />
+            Sync
+          </button>
         </div>
         
         <div className="flex-1 overflow-y-auto">

@@ -18,6 +18,8 @@ type ViewMode = 'Month' | 'Week' | 'Day';
 
 export default function Appointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [syncingContacts, setSyncingContacts] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('Month');
@@ -42,13 +44,36 @@ export default function Appointments() {
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      if (loading) setLoading(false);
+    }
+  };
+
+  const fetchContacts = async () => {
+    try {
+      const res = await fetch('/api/contacts');
+      const data = await res.json();
+      setContacts(data);
+    } catch (e) {
+      console.error(e);
     }
   };
 
   useEffect(() => {
     fetchAppointments();
+    fetchContacts();
   }, []);
+
+  const handleSyncContacts = async () => {
+    setSyncingContacts(true);
+    try {
+      await fetch('/api/contacts/sync', { method: 'POST' });
+      await fetchContacts();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSyncingContacts(false);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -305,14 +330,41 @@ export default function Appointments() {
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Title</label>
                     <input required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-primary-500/50" placeholder="e.g. Client Consultation" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4 relative">
+                    <div className="col-span-2">
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</label>
+                        <button
+                          type="button"
+                          onClick={handleSyncContacts}
+                          disabled={syncingContacts}
+                          className="text-[10px] flex items-center text-primary-500 hover:text-primary-600 disabled:opacity-50 transition-colors bg-primary-500/10 hover:bg-primary-500/20 px-2 py-0.5 rounded font-bold uppercase tracking-widest"
+                        >
+                          {syncingContacts ? "Syncing..." : "Sync Contacts"}
+                        </button>
+                      </div>
+                      <select 
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors mb-3"
+                        onChange={e => {
+                          const matchedContact = contacts.find(c => c.id === e.target.value);
+                          if (matchedContact) {
+                            setFormData({...formData, contactName: matchedContact.name, contactPhone: matchedContact.phone});
+                          }
+                        }}
+                      >
+                        <option value="">-- Select from contacts (optional) --</option>
+                        {contacts.map(c => (
+                          <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
+                        ))}
+                      </select>
+                    </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Contact Name</label>
                       <input required type="text" value={formData.contactName} onChange={e => setFormData({...formData, contactName: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-primary-500/50" />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">WhatsApp Phone +</label>
-                      <input required type="text" value={formData.contactPhone} onChange={e => setFormData({...formData, contactPhone: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-primary-500/50 placeholder:text-slate-400" placeholder="1234567890" />
+                      <input required type="text" value={formData.contactPhone} disabled={!!contacts.find(c => c.phone === formData.contactPhone)} onChange={e => setFormData({...formData, contactPhone: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-primary-500/50 placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed" placeholder="1234567890" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">

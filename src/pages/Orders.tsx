@@ -244,7 +244,7 @@ export default function Orders() {
               <div className="grid grid-cols-2 gap-5 relative">
                 <div className="col-span-2">
                   <div className="flex justify-between items-center mb-2">
-                    <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500">Customer Name</label>
+                    <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500">Customer</label>
                     <button
                       type="button"
                       onClick={handleSyncContacts}
@@ -254,18 +254,33 @@ export default function Orders() {
                       {syncingContacts ? "Syncing..." : "Sync Contacts"}
                     </button>
                   </div>
-                  <input required type="text" list="contacts-list" value={customerName} onChange={e => {
-                    const matchedContact = contacts.find(c => c.name === e.target.value);
-                    setCustomerName(e.target.value);
-                    if (matchedContact) setCustomerPhone(matchedContact.phone);
-                  }} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" />
-                  <datalist id="contacts-list">
-                    {contacts.map(c => <option key={c.id} value={c.name}>{c.phone}</option>)}
-                  </datalist>
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Phone Number</label>
-                  <input required type="text" placeholder="+1234567890" value={customerPhone} disabled={!!contacts.find(c => c.name === customerName)} onChange={e => setCustomerPhone(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:border-primary-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" />
+                  
+                  <select 
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors mb-3"
+                    onChange={e => {
+                      const matchedContact = contacts.find(c => c.id === e.target.value);
+                      if (matchedContact) {
+                        setCustomerName(matchedContact.name);
+                        setCustomerPhone(matchedContact.phone);
+                      }
+                    }}
+                  >
+                    <option value="">-- Select from contacts (optional) --</option>
+                    {contacts.map(c => (
+                      <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
+                    ))}
+                  </select>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Customer Name</label>
+                      <input required type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Phone Number</label>
+                      <input required type="text" placeholder="+1234567890" value={customerPhone} disabled={!!contacts.find(c => c.phone === customerPhone)} onChange={e => setCustomerPhone(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:border-primary-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" />
+                    </div>
+                  </div>
                 </div>
               </div>
 
