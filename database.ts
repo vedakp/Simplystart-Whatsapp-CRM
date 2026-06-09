@@ -10,8 +10,9 @@ export async function connectDB(config: any) {
     await sequelize.close();
   }
   
+  const finalHost = config.host === 'localhost' ? '127.0.0.1' : config.host;
   sequelize = new Sequelize(config.database, config.user, config.password, {
-    host: config.host,
+    host: finalHost,
     port: parseInt(config.port) || 3306,
     dialect: 'mysql',
     logging: false,
