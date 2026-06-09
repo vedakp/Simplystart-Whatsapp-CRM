@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 
 const navItems = [
   { path: '/', label: 'Overview', icon: Lucide.LayoutDashboard },
+  { path: '/appointments', label: 'Appointments', icon: Lucide.Calendar },
   { path: '/chats', label: 'Live Chats', icon: Lucide.MessageCircle },
   { path: '/orders', label: 'Orders', icon: Lucide.ShoppingCart },
   { path: '/leads', label: 'Leads Pipeline', icon: Lucide.Target },
