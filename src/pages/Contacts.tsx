@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, RefreshCw, Search, Loader2, Tag, X } from 'lucide-react';
+import { Users, RefreshCw, Search, Loader2, Tag, X, UserPlus } from 'lucide-react';
 import { cn } from '../utils';
 
 export default function Contacts() {
@@ -13,6 +13,11 @@ export default function Contacts() {
   const [newTag, setNewTag] = useState('');
   const [contactTags, setContactTags] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Manual Contact Creation State
+  const [addingContact, setAddingContact] = useState(false);
+  const [newContact, setNewContact] = useState({ name: '', phone: '', tags: '' });
+  const [isAdding, setIsAdding] = useState(false);
 
   // Auto refresh
   useEffect(() => {
@@ -38,6 +43,24 @@ export default function Contacts() {
       await fetchContacts();
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const createContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAdding(true);
+    try {
+      const tagsArray = newContact.tags.split(',').map(t => t.trim()).filter(Boolean);
+      await fetch('/api/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newContact.name, phone: newContact.phone, tags: tagsArray })
+      });
+      await fetchContacts();
+      setAddingContact(false);
+      setNewContact({ name: '', phone: '', tags: '' });
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -75,14 +98,23 @@ export default function Contacts() {
           <h2 className="font-bold tracking-tight text-2xl text-slate-900 dark:text-white">Phonebook Contacts</h2>
           <p className="text-xs text-slate-500 mt-1">Manage and sync your connected contacts.</p>
         </div>
-        <button
-          onClick={handleSync}
-          disabled={syncing}
-          className="flex items-center px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-full font-semibold transition-colors disabled:opacity-50 text-[10px] uppercase tracking-widest"
-        >
-          <RefreshCw className={cn("w-4 h-4 mr-2", syncing && "animate-spin")} />
-          {syncing ? "Syncing..." : "Background Sync"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setAddingContact(true)}
+            className="flex items-center px-4 py-2.5 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full font-semibold transition-colors text-[10px] uppercase tracking-widest text-slate-900 dark:text-white"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Add Contact
+          </button>
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="flex items-center px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-full font-semibold transition-colors disabled:opacity-50 text-[10px] uppercase tracking-widest"
+          >
+            <RefreshCw className={cn("w-4 h-4 mr-2", syncing && "animate-spin")} />
+            {syncing ? "Syncing..." : "Background Sync"}
+          </button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden flex flex-col">
@@ -161,11 +193,11 @@ export default function Contacts() {
       </div>
 
       {editingContact && (
-        <div className="fixed inset-0 bg-slate-50 dark:bg-[#0a0b0d]/80 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#0a0b0d]/80 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-[#07080a] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-200 dark:border-white/5 flex justify-between items-center">
               <h3 className="font-bold tracking-tight text-lg text-slate-900 dark:text-white">Manage Tags</h3>
-              <button onClick={() => setEditingContact(null)} className="text-slate-500 hover:text-slate-900 dark:text-white transition-colors"><X className="w-5 h-5"/></button>
+              <button onClick={() => setEditingContact(null)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"><X className="w-5 h-5"/></button>
             </div>
             <div className="p-6">
               <p className="text-slate-600 dark:text-slate-400 text-sm mb-6">Assign tags to <strong className="text-slate-900 dark:text-white">{editingContact.name}</strong> to easily group them for campaigns.</p>
@@ -208,12 +240,66 @@ export default function Contacts() {
               </div>
             </div>
             <div className="flex justify-end p-5 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-black/20 gap-3">
-               <button onClick={() => setEditingContact(null)} className="px-5 py-2.5 text-[10px] font-bold tracking-widest uppercase text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors">Cancel</button>
+               <button onClick={() => setEditingContact(null)} className="px-5 py-2.5 text-[10px] font-bold tracking-widest uppercase text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Cancel</button>
                <button onClick={saveTags} disabled={isSaving} className="px-5 py-2.5 text-[10px] font-bold tracking-widest uppercase bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-full transition-colors flex items-center">
                  {isSaving ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : null}
                  Save Tags
                </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {addingContact && (
+        <div className="fixed inset-0 bg-[#0a0b0d]/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#07080a] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div className="px-6 py-5 border-b border-slate-200 dark:border-white/5 flex justify-between items-center">
+              <h3 className="font-bold tracking-tight text-lg text-slate-900 dark:text-white">Add Contact</h3>
+              <button disabled={isAdding} onClick={() => setAddingContact(false)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"><X className="w-5 h-5"/></button>
+            </div>
+            <form onSubmit={createContact}>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Name</label>
+                  <input
+                    required
+                    type="text"
+                    value={newContact.name}
+                    onChange={e => setNewContact({ ...newContact, name: e.target.value })}
+                    placeholder="e.g. John Doe"
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">WhatsApp Number (with country code)</label>
+                  <input
+                    required
+                    type="text"
+                    value={newContact.phone}
+                    onChange={e => setNewContact({ ...newContact, phone: e.target.value })}
+                    placeholder="e.g. +1234567890"
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Tags (optional, comma separated)</label>
+                  <input
+                    type="text"
+                    value={newContact.tags}
+                    onChange={e => setNewContact({ ...newContact, tags: e.target.value })}
+                    placeholder="e.g. VIP, Customer"
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end p-5 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-black/20 gap-3">
+                 <button type="button" disabled={isAdding} onClick={() => setAddingContact(false)} className="px-5 py-2.5 text-[10px] font-bold tracking-widest uppercase text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Cancel</button>
+                 <button type="submit" disabled={isAdding} className="px-5 py-2.5 text-[10px] font-bold tracking-widest uppercase bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-full transition-colors flex items-center">
+                   {isAdding ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : <UserPlus className="w-3.5 h-3.5 mr-2" />}
+                   {isAdding ? 'Adding...' : 'Save Contact'}
+                 </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

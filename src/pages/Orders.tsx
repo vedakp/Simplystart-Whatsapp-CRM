@@ -28,6 +28,22 @@ export default function Orders() {
     { name: '', quantity: 1, price: 0 }
   ]);
 
+  const [syncingContacts, setSyncingContacts] = useState(false);
+
+  const handleSyncContacts = async () => {
+    setSyncingContacts(true);
+    try {
+      await fetch('/api/contacts/sync', { method: 'POST' });
+      const contactRes = await fetch('/api/contacts');
+      const contactData = await contactRes.json();
+      setContacts(contactData);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSyncingContacts(false);
+    }
+  };
+
   const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   const fetchOrders = async () => {
@@ -227,7 +243,17 @@ export default function Orders() {
             <form onSubmit={handleCreate} className="p-6 space-y-5">
               <div className="grid grid-cols-2 gap-5 relative">
                 <div className="col-span-2">
-                  <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Customer Name</label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500">Customer Name</label>
+                    <button
+                      type="button"
+                      onClick={handleSyncContacts}
+                      disabled={syncingContacts}
+                      className="text-[10px] flex items-center text-primary-500 hover:text-primary-600 disabled:opacity-50 transition-colors bg-primary-500/10 hover:bg-primary-500/20 px-2 py-0.5 rounded font-bold uppercase tracking-widest"
+                    >
+                      {syncingContacts ? "Syncing..." : "Sync Contacts"}
+                    </button>
+                  </div>
                   <input required type="text" list="contacts-list" value={customerName} onChange={e => {
                     const matchedContact = contacts.find(c => c.name === e.target.value);
                     setCustomerName(e.target.value);
@@ -239,7 +265,7 @@ export default function Orders() {
                 </div>
                 <div className="col-span-2">
                   <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Phone Number</label>
-                  <input required type="text" placeholder="+1234567890" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:border-primary-500/50 transition-colors" />
+                  <input required type="text" placeholder="+1234567890" value={customerPhone} disabled={!!contacts.find(c => c.name === customerName)} onChange={e => setCustomerPhone(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:border-primary-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" />
                 </div>
               </div>
 

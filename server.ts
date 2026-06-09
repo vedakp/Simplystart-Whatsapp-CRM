@@ -288,6 +288,45 @@ async function connectToWhatsApp() {
     }
   });
 
+  // Deep sync historical contacts on connect
+  sock.ev.on('messaging-history.set', async ({ contacts: newContacts }: any) => {
+    if (newContacts && newContacts.length > 0) {
+      for (const c of newContacts) {
+        if (!c.id.includes('@g.us') && !c.id.includes('@newsletter')) {
+          const cData = {
+               id: uuidv4(),
+               name: c.name || c.notify || c.id.split('@')[0],
+               jid: c.id,
+               phone: c.id.split('@')[0],
+               tags: []
+          };
+          if (!contacts.find((ex: any) => ex.jid === c.id)) {
+            contacts.push(cData);
+          }
+          if (isDBConnected()) {
+             try {
+               await models.Contact.findOrCreate({ where: { jid: c.id }, defaults: cData });
+             } catch(e){}
+          }
+        } else if (c.id.includes('@g.us')) {
+          const gData = {
+              id: uuidv4(),
+              name: c.name || c.subject || c.id.split('@')[0],
+              jid: c.id
+          };
+          if (!groups.find((ex: any) => ex.jid === c.id)) {
+            groups.push(gData);
+          }
+          if (isDBConnected()) {
+             try {
+               await models.Group.findOrCreate({ where: { jid: c.id }, defaults: gData });
+             } catch(e){}
+          }
+        }
+      }
+    }
+  });
+
   // Fallback contact loading
   sock.ev.on('contacts.upsert', async (newContacts: any[]) => {
     for (const c of newContacts) {
@@ -392,9 +431,43 @@ async function startServer() {
   app.get("/api/contacts", async (req, res) => {
     if (isDBConnected()) {
       const dbContacts = await models.Contact.findAll();
-      return res.json(dbContacts.map((c: any) => c.toJSON()));
+      return res.json(dbContacts.map((c: any) => {
+        const json = c.toJSON();
+        if (typeof json.tags === 'string') {
+          try { json.tags = JSON.parse(json.tags); } catch(e){}
+        }
+        if (!Array.isArray(json.tags)) json.tags = [];
+        return json;
+      }));
     }
     res.json(contacts);
+  });
+
+  app.post("/api/contacts", async (req, res) => {
+    const { name, phone, tags } = req.body;
+    if (!name || !phone) return res.status(400).json({ error: "Name and phone required" });
+
+    const sanitizedPhone = phone.replace(/\D/g, '');
+    const jid = `${sanitizedPhone}@s.whatsapp.net`;
+    const cData = {
+      id: uuidv4(),
+      name,
+      jid,
+      phone: sanitizedPhone,
+      tags: tags || []
+    };
+
+    if (isDBConnected()) {
+       try {
+         await models.Contact.create(cData);
+         res.json(cData);
+       } catch (e) {
+         res.status(500).json({ error: "Failed to create contact" });
+       }
+    } else {
+       contacts.push(cData);
+       res.json(cData);
+    }
   });
 
   app.get("/api/groups", async (req, res) => {
@@ -596,9 +669,15 @@ async function startServer() {
     if (isWhatsAppConnected && sock && customerPhone) {
       const sanitizedNumber = String(customerPhone).replace(/\D/g, '');
       const jid = `${sanitizedNumber}@s.whatsapp.net`;
+      
+      let itemsList = "";
+      if (Array.isArray(items) && items.length > 0) {
+        itemsList = "\n\nItems:\n" + items.map((i: any) => `- ${i.name} (x${i.quantity}) - $${i.price.toFixed(2)}`).join("\n") + `\n\nTotal: $${Number(totalAmount).toFixed(2)}`;
+      }
+      
       messageQueue.push({
          jid,
-         message: `Hello ${customerName || 'Customer'}, your order ${newOrder.id} has been received and is currently Pending.`,
+         message: `Hello ${customerName || 'Customer'}, your order ${newOrder.id} has been received and is currently Pending.${itemsList}`,
          campId: ''
       });
       newOrder.logs.push({
