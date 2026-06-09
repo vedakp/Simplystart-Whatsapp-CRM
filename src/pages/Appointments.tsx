@@ -20,11 +20,18 @@ export default function Appointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [syncingContacts, setSyncingContacts] = useState(false);
+  const [contactSearchOpen, setContactSearchOpen] = useState(false);
+  const [contactSearch, setContactSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('Month');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const filteredContacts = contacts.filter(c => 
+    (c.name || '').toLowerCase().includes(contactSearch.toLowerCase()) || 
+    (c.phone || '').includes(contactSearch)
+  );
 
   const [formData, setFormData] = useState<Partial<Appointment>>({
     title: '',
@@ -343,20 +350,38 @@ export default function Appointments() {
                           {syncingContacts ? "Syncing..." : "Sync Contacts"}
                         </button>
                       </div>
-                      <select 
-                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors mb-3"
-                        onChange={e => {
-                          const matchedContact = contacts.find(c => c.id === e.target.value);
-                          if (matchedContact) {
-                            setFormData({...formData, contactName: matchedContact.name, contactPhone: matchedContact.phone});
-                          }
-                        }}
-                      >
-                        <option value="">-- Select from contacts (optional) --</option>
-                        {contacts.map(c => (
-                          <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
-                        ))}
-                      </select>
+                      <div className="relative mb-3">
+                        <input 
+                          type="text"
+                          placeholder="Search customer by name or number..."
+                          value={contactSearch}
+                          onChange={e => {
+                             setContactSearch(e.target.value);
+                             setContactSearchOpen(true);
+                          }}
+                          onFocus={() => setContactSearchOpen(true)}
+                          onBlur={() => setTimeout(() => setContactSearchOpen(false), 200)}
+                          className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors"
+                        />
+                        {contactSearchOpen && filteredContacts.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto bg-white dark:bg-[#0a0b0d] border border-slate-200 dark:border-white/10 rounded-lg shadow-lg">
+                            {filteredContacts.map(c => (
+                              <div 
+                                key={c.id} 
+                                className="px-3 py-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 text-sm"
+                                onClick={() => {
+                                  setFormData({ ...formData, contactName: c.name, contactPhone: c.phone });
+                                  setContactSearch(c.name);
+                                  setContactSearchOpen(false);
+                                }}
+                              >
+                                <div className="font-medium text-slate-900 dark:text-white">{c.name}</div>
+                                <div className="text-xs text-slate-500 font-mono">{c.phone}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Contact Name</label>

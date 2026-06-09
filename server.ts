@@ -445,18 +445,24 @@ async function startServer() {
 
   // 2. Contact Sync & Tags
   app.get("/api/contacts", async (req, res) => {
+    let result = [];
     if (isDBConnected()) {
       const dbContacts = await models.Contact.findAll();
-      return res.json(dbContacts.map((c: any) => {
+      result = dbContacts.map((c: any) => {
         const json = c.toJSON();
         if (typeof json.tags === 'string') {
           try { json.tags = JSON.parse(json.tags); } catch(e){}
         }
         if (!Array.isArray(json.tags)) json.tags = [];
         return json;
-      }));
+      });
+    } else {
+      result = [...contacts];
     }
-    res.json(contacts);
+    
+    // Sort by name
+    result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    res.json(result);
   });
 
   app.post("/api/contacts", async (req, res) => {
