@@ -82,8 +82,8 @@ export default function Chats() {
       {/* Sidebar - Chat List */}
       <div className="w-full md:w-80 flex flex-col bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden shrink-0">
         <div className="p-5 border-b border-slate-200 dark:border-white/5">
-          <h2 className="font-serif text-xl text-slate-900 dark:text-white flex items-center">
-            <MessageCircle className="w-5 h-5 mr-3 text-emerald-500" />
+          <h2 className="font-bold tracking-tight text-lg text-slate-900 dark:text-white flex items-center">
+            <MessageCircle className="w-5 h-5 mr-3 text-primary-500" />
             Live Chats
           </h2>
         </div>
@@ -108,8 +108,8 @@ export default function Chats() {
                     selectedChat?.id === chat.id && "bg-slate-200 dark:bg-white/[0.08]"
                   )}
                 >
-                  <div className="w-10 h-10 rounded-full bg-emerald-900/40 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                     <User className="w-5 h-5 text-emerald-500" />
+                  <div className="w-10 h-10 rounded-full bg-primary-900/40 border border-primary-500/30 flex items-center justify-center shrink-0">
+                     <User className="w-5 h-5 text-primary-500" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-1">
@@ -134,8 +134,8 @@ export default function Chats() {
             {/* Header */}
             <div className="p-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-black/20 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 rounded-full bg-emerald-900/40 border border-emerald-500/30 flex items-center justify-center">
-                     <User className="w-5 h-5 text-emerald-500" />
+                 <div className="w-10 h-10 rounded-full bg-primary-900/40 border border-primary-500/30 flex items-center justify-center">
+                     <User className="w-5 h-5 text-primary-500" />
                   </div>
                   <div>
                     <h3 className="font-medium text-slate-900 dark:text-white">{selectedChat.name}</h3>
@@ -147,7 +147,7 @@ export default function Chats() {
                    // Navigate to Orders and pass state via location to pre-fill Create Order
                    navigate('/orders', { state: { createOrderPhone: selectedChat.phone, createOrderName: selectedChat.name } });
                 }}
-                className="flex items-center px-4 py-2 bg-emerald-900/20 hover:bg-emerald-900/40 border border-emerald-500/30 text-emerald-400 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors"
+                className="flex items-center px-4 py-2 bg-primary-900/20 hover:bg-primary-900/40 border border-primary-500/30 text-primary-400 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors"
               >
                 <ShoppingCart className="w-3.5 h-3.5 mr-2" />
                 Place Order
@@ -161,7 +161,7 @@ export default function Chats() {
                    <div className={cn(
                      "p-3 rounded-2xl text-sm",
                      msg.fromMe 
-                      ? "bg-emerald-600/20 border border-emerald-500/30 text-emerald-50 rounded-br-none" 
+                      ? "bg-primary-600/20 border border-primary-500/30 text-primary-50 rounded-br-none" 
                       : "bg-slate-200 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-bl-none"
                    )}>
                      {msg.text}
@@ -180,7 +180,7 @@ export default function Chats() {
                    value={newMessage}
                    onChange={e => setNewMessage(e.target.value)}
                    placeholder="Type a message..."
-                   className="flex-1 bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-full px-5 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
+                   className="flex-1 bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-full px-5 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary-500/50 transition-colors"
                  />
                  <button 
                   type="submit" 
@@ -195,7 +195,7 @@ export default function Chats() {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
             <MessageCircle className="w-16 h-16 opacity-20 mb-4" />
-            <p className="font-serif text-lg text-slate-900 dark:text-white">Select a chat to view messages</p>
+            <p className="font-bold tracking-tight text-base text-slate-900 dark:text-white">Select a chat to view messages</p>
             <p className="text-xs mt-2 uppercase tracking-widest font-mono">Real-time sync active</p>
           </div>
         )}

@@ -22,5 +22,6 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": ["run-db-patch.ts", "run-db-patch2.ts"]
 }

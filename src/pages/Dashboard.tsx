@@ -34,7 +34,7 @@ export default function Dashboard() {
   }, []);
 
   const cards = [
-    { title: 'Total Contacts', value: stats.contacts, icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { title: 'Total Contacts', value: stats.contacts, icon: Users, color: 'text-primary-500', bg: 'bg-primary-500/10' },
     { title: 'Campaigns', value: stats.campaigns, icon: MessageSquare, color: 'text-blue-400', bg: 'bg-blue-500/10' },
     { title: 'Total Orders', value: stats.orders, icon: ShoppingCart, color: 'text-amber-400', bg: 'bg-amber-500/10' },
     { title: 'System Status', value: 'Healthy', icon: Activity, color: 'text-purple-400', bg: 'bg-purple-500/10' },
@@ -47,12 +47,12 @@ export default function Dashboard() {
           <div key={i} className="p-6 bg-white dark:bg-white/[0.02] rounded-2xl border border-slate-200 dark:border-white/5 flex flex-col justify-between h-40">
             <div>
               <div className="flex justify-between items-start">
-                <h4 className="text-[10px] uppercase tracking-widest text-emerald-500 font-bold">{card.title}</h4>
+                <h4 className="text-[10px] uppercase tracking-widest text-primary-500 font-bold">{card.title}</h4>
                 <div className={cn("p-2 rounded-lg", card.bg)}>
                   <card.icon className={cn("w-5 h-5", card.color)} />
                 </div>
               </div>
-              <p className="font-serif text-3xl text-slate-900 dark:text-white mt-2">{card.value}</p>
+              <p className="font-bold tracking-tight text-2xl text-slate-900 dark:text-white mt-2">{card.value}</p>
             </div>
           </div>
         ))}
@@ -61,7 +61,7 @@ export default function Dashboard() {
       <div className="bg-white dark:bg-white/[0.02] rounded-2xl border border-slate-200 dark:border-white/5 p-12 text-center text-slate-600 dark:text-slate-400">
         <div className="max-w-md mx-auto space-y-4">
           <MessageSquare className="w-12 h-12 text-slate-200 dark:text-white/20 mx-auto" />
-          <h2 className="font-serif text-2xl text-slate-900 dark:text-white">Welcome to Simplystart Whastapp Auto</h2>
+          <h2 className="font-bold tracking-tight text-xl text-slate-900 dark:text-white">Welcome to Simplystart Whastapp Auto</h2>
           <p className="text-sm tracking-wide leading-relaxed">
             Control your automated WhatsApp campaigns, manage customer orders, and sync your contacts all from this sophisticated console.
           </p>

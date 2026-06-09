@@ -9,6 +9,7 @@ export default function Campaigns() {
   const [isCreating, setIsCreating] = useState(false);
   const [contacts, setContacts] = useState<any[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
+  const [filter, setFilter] = useState('All');
   
   const [messageTemplate, setMessageTemplate] = useState('');
   const [aiGenerating, setAiGenerating] = useState(false);
@@ -122,7 +123,7 @@ export default function Campaigns() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="font-serif text-3xl text-slate-900 dark:text-white">Message Campaigns</h2>
+          <h2 className="font-bold tracking-tight text-2xl text-slate-900 dark:text-white">Message Campaigns</h2>
           <p className="text-xs text-slate-500 mt-1">Send bulk WhatsApp messages to contact segments.</p>
         </div>
       </div>
@@ -132,7 +133,7 @@ export default function Campaigns() {
         {/* Create Form */}
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-white/[0.02] border text-sm border-slate-200 dark:border-white/5 rounded-2xl p-6 sticky top-6">
-            <h3 className="font-serif text-lg text-slate-900 dark:text-white mb-6 flex items-center">
+            <h3 className="font-bold tracking-tight text-base text-slate-900 dark:text-white mb-6 flex items-center">
               New Campaign
             </h3>
             
@@ -144,7 +145,7 @@ export default function Campaigns() {
                   name="name"
                   type="text" 
                   placeholder="e.g. Summer Promo" 
-                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors"
                 />
               </div>
 
@@ -154,7 +155,7 @@ export default function Campaigns() {
                   name="tags"
                   type="text" 
                   placeholder="e.g. VIP, Customer" 
-                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors"
                 />
               </div>
 
@@ -163,7 +164,7 @@ export default function Campaigns() {
                 <select 
                   name="groups"
                   multiple
-                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500/50 transition-colors text-sm min-h-[80px]"
+                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-primary-500/50 transition-colors text-sm min-h-[80px]"
                 >
                   <option disabled value="" className="text-slate-500 italic">Select groups (Ctrl/Cmd to pick multiple)</option>
                   {groups.map(g => (
@@ -185,7 +186,7 @@ export default function Campaigns() {
                              if(e.target.checked) setSelectedContacts([...selectedContacts, c.id]);
                              else setSelectedContacts(selectedContacts.filter(id => id !== c.id));
                           }}
-                          className="rounded border-slate-300 dark:border-white/20 text-emerald-500 focus:ring-emerald-500" 
+                          className="rounded border-slate-300 dark:border-white/20 text-primary-500 focus:ring-primary-500" 
                        />
                        <span>{c.name}</span>
                      </label>
@@ -196,7 +197,7 @@ export default function Campaigns() {
 
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 flex justify-between">
-                  <span>Message Body <span className="text-emerald-500 ml-1">Use {'{{name}}'}</span></span>
+                  <span>Message Body <span className="text-primary-500 ml-1">Use {'{{name}}'}</span></span>
                   <button 
                     type="button" 
                     onClick={(e) => { e.preventDefault(); setAiModalOpen(true); }}
@@ -213,7 +214,7 @@ export default function Campaigns() {
                   value={messageTemplate}
                   onChange={(e) => setMessageTemplate(e.target.value)}
                   placeholder="Hello {{name}}, check out our new update..." 
-                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 transition-colors resize-none"
+                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors resize-none"
                 />
               </div>
 
@@ -232,7 +233,7 @@ export default function Campaigns() {
               <div className="absolute inset-0 bg-white/80 dark:bg-[#07080a]/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-4">
                 <div className="bg-white dark:bg-[#0a0b0d] border border-slate-200 dark:border-white/10 p-5 rounded-2xl w-full max-w-sm shadow-xl">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-serif text-[15px] text-slate-900 dark:text-white flex items-center">
+                    <h3 className="font-bold tracking-tight text-[15px] text-slate-900 dark:text-white flex items-center">
                       <Sparkles className="w-4 h-4 mr-2 text-purple-500" /> AI Writer
                     </h3>
                     <button onClick={() => setAiModalOpen(false)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white">
@@ -269,9 +270,9 @@ export default function Campaigns() {
           <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden flex flex-col h-full min-h-[400px]">
             <div className="p-6 border-b border-slate-200 dark:border-white/5 flex items-center justify-between">
               <div className="flex items-center">
-                 <h3 className="font-serif text-lg text-slate-900 dark:text-white">Campaign Pulse</h3>
+                 <h3 className="font-bold tracking-tight text-base text-slate-900 dark:text-white">Campaign Pulse</h3>
                  {campaigns.some(c => c.status === 'Sending') && (
-                   <span className="ml-4 px-2 py-0.5 text-[10px] bg-emerald-900/20 text-emerald-400 border border-emerald-500/20 rounded uppercase tracking-widest font-bold animate-pulse">Running Background Engine</span>
+                   <span className="ml-4 px-2 py-0.5 text-[10px] bg-primary-900/20 text-primary-400 border border-primary-500/20 rounded uppercase tracking-widest font-bold animate-pulse">Running Background Engine</span>
                  )}
               </div>
               <div className="flex items-center space-x-4">
@@ -289,7 +290,7 @@ export default function Campaigns() {
                      </button>
                    ))}
                 </div>
-                <button onClick={fetchCampaigns} className="text-[10px] text-slate-500 underline uppercase tracking-tighter hover:text-emerald-400 transition-colors" title="Refresh">
+                <button onClick={fetchCampaigns} className="text-[10px] text-slate-500 underline uppercase tracking-tighter hover:text-primary-400 transition-colors" title="Refresh">
                   Refresh
                 </button>
               </div>
@@ -315,7 +316,7 @@ export default function Campaigns() {
                         <div className="font-medium text-slate-200 text-sm">{camp.name}</div>
                         <span className={cn(
                           "px-2 py-1 text-[10px] uppercase font-bold rounded",
-                          camp.status === 'Completed' ? "bg-emerald-900/20 text-emerald-500 border border-emerald-500/20" :
+                          camp.status === 'Completed' ? "bg-primary-900/20 text-primary-500 border border-primary-500/20" :
                           camp.status === 'Failed' ? "bg-rose-900/20 text-rose-500 border border-rose-500/20" :
                           "bg-amber-900/20 text-amber-500 border border-amber-500/20"
                         )}>
@@ -330,11 +331,11 @@ export default function Campaigns() {
                       <div className="mb-4">
                         <div className="flex justify-between text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1.5">
                           <span>Progress</span>
-                          <span className={camp.sentCount === camp.targets ? "text-emerald-400" : ""}>{camp.sentCount || 0} / {camp.targets} Sent</span>
+                          <span className={camp.sentCount === camp.targets ? "text-primary-400" : ""}>{camp.sentCount || 0} / {camp.targets} Sent</span>
                         </div>
                         <div className="h-1.5 w-full bg-slate-100 dark:bg-black/40 rounded-full overflow-hidden border border-slate-200 dark:border-white/5">
                           <div 
-                            className={cn("h-full transition-all duration-500 rounded-full", camp.status === 'Completed' ? "bg-emerald-500" : "bg-amber-500")}
+                            className={cn("h-full transition-all duration-500 rounded-full", camp.status === 'Completed' ? "bg-primary-500" : "bg-amber-500")}
                             style={{ width: `${Math.min(100, Math.max(0, ((camp.sentCount || 0) / Math.max(1, camp.targets)) * 100))}%` }}
                           />
                         </div>

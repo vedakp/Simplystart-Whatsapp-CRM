@@ -63,7 +63,7 @@ export default function Leads() {
     <div className="space-y-6 h-[calc(100vh-120px)] flex flex-col">
       <div className="flex justify-between items-center shrink-0">
         <div>
-          <h2 className="font-serif text-3xl text-slate-900 dark:text-white">Lead Management</h2>
+          <h2 className="font-bold tracking-tight text-2xl text-slate-900 dark:text-white">Lead Management</h2>
           <p className="text-xs text-slate-500 mt-1">Track potential customers through your pipeline.</p>
         </div>
         <button
@@ -88,18 +88,18 @@ export default function Leads() {
               </div>
               <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
                 {leads.filter(l => l.status === status).map(lead => (
-                  <div key={lead.id} className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 p-4 rounded-xl hover:border-emerald-500/30 transition-colors group">
+                  <div key={lead.id} className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 p-4 rounded-xl hover:border-primary-500/30 transition-colors group">
                     <div className="font-medium text-slate-900 dark:text-white text-sm mb-2">{lead.name}</div>
                     
                     {lead.phone && <div className="flex items-center text-[10px] text-slate-500 mb-1"><Phone className="w-3 h-3 mr-1.5" /> {lead.phone}</div>}
                     {lead.email && <div className="flex items-center text-[10px] text-slate-500 mb-2 truncate"><Mail className="w-3 h-3 mr-1.5" /> {lead.email}</div>}
                     
                     <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-200 dark:border-white/5">
-                      <span className="text-xs text-emerald-400 font-mono font-medium">${lead.value}</span>
+                      <span className="text-xs text-primary-400 font-mono font-medium">${lead.value}</span>
                       <select 
                         value={lead.status}
                         onChange={(e) => updateStatus(lead.id, e.target.value)}
-                        className="bg-transparent text-[10px] uppercase font-bold text-slate-500 hover:text-emerald-400 focus:outline-none tracking-widest cursor-pointer"
+                        className="bg-transparent text-[10px] uppercase font-bold text-slate-500 hover:text-primary-400 focus:outline-none tracking-widest cursor-pointer"
                       >
                        {columns.map(c => <option key={c} value={c} className="text-white dark:text-slate-900 bg-slate-900 dark:bg-white">{c}</option>)}
                       </select>
@@ -116,25 +116,25 @@ export default function Leads() {
          <div className="fixed inset-0 bg-slate-50 dark:bg-[#0a0b0d]/80 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-[#07080a] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-200 dark:border-white/5 flex justify-between items-center">
-              <h3 className="font-serif text-xl text-slate-900 dark:text-white">New Lead</h3>
+              <h3 className="font-bold tracking-tight text-lg text-slate-900 dark:text-white">New Lead</h3>
               <button onClick={() => setShowCreate(false)} className="text-slate-500 hover:text-slate-900 dark:text-white transition-colors">✕</button>
             </div>
             <form onSubmit={handleCreate} className="p-6 space-y-5">
                <div>
                   <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Full Name</label>
-                  <input required type="text" value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors" />
+                  <input required type="text" value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" />
                 </div>
                 <div>
                   <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Phone</label>
-                  <input type="text" value={newLead.phone} onChange={e => setNewLead({...newLead, phone: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors" />
+                  <input type="text" value={newLead.phone} onChange={e => setNewLead({...newLead, phone: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" />
                 </div>
                 <div>
                   <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Email</label>
-                  <input type="email" value={newLead.email} onChange={e => setNewLead({...newLead, email: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors" />
+                  <input type="email" value={newLead.email} onChange={e => setNewLead({...newLead, email: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" />
                 </div>
                 <div>
                   <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Potential Value ($)</label>
-                  <input type="number" value={newLead.value} onChange={e => setNewLead({...newLead, value: parseInt(e.target.value) || 0})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors" />
+                  <input type="number" value={newLead.value} onChange={e => setNewLead({...newLead, value: parseInt(e.target.value) || 0})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" />
                 </div>
                 <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-white/5 space-x-3">
                   <button type="button" onClick={() => setShowCreate(false)} className="px-5 py-2.5 text-[10px] font-bold tracking-widest uppercase text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors">Cancel</button>

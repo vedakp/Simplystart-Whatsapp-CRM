@@ -72,7 +72,7 @@ export default function Contacts() {
     <div className="space-y-6 relative">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="font-serif text-3xl text-slate-900 dark:text-white">Phonebook Contacts</h2>
+          <h2 className="font-bold tracking-tight text-2xl text-slate-900 dark:text-white">Phonebook Contacts</h2>
           <p className="text-xs text-slate-500 mt-1">Manage and sync your connected contacts.</p>
         </div>
         <button
@@ -94,7 +94,7 @@ export default function Contacts() {
               placeholder="Search contacts..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-primary-500/50 transition-colors"
             />
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function Contacts() {
                   <tr key={contact.id} className="hover:bg-white dark:bg-white/[0.02] transition-colors">
                     <td className="px-6 py-5">
                       <div className="flex items-center text-slate-900 dark:text-white font-medium">
-                        <div className="w-8 h-8 rounded-full border border-emerald-500/20 bg-emerald-900/20 text-emerald-400 flex items-center justify-center font-bold text-[10px] mr-3">
+                        <div className="w-8 h-8 rounded-full border border-primary-500/20 bg-primary-900/20 text-primary-400 flex items-center justify-center font-bold text-[10px] mr-3">
                           {contact.name?.charAt(0) || '?'}
                         </div>
                         {contact.name || contact.phone}
@@ -135,7 +135,7 @@ export default function Contacts() {
                     <td className="px-6 py-5">
                       <div className="flex gap-2 flex-wrap max-w-xs">
                         {contact.tags?.length ? contact.tags.map((tag: string) => (
-                          <span key={tag} className="px-2 py-1 text-[10px] font-bold rounded bg-emerald-900/20 border border-emerald-500/20 text-emerald-400 uppercase tracking-wider">
+                          <span key={tag} className="px-2 py-1 text-[10px] font-bold rounded bg-primary-900/20 border border-primary-500/20 text-primary-400 uppercase tracking-wider">
                             {tag}
                           </span>
                         )) : (
@@ -164,7 +164,7 @@ export default function Contacts() {
         <div className="fixed inset-0 bg-slate-50 dark:bg-[#0a0b0d]/80 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-[#07080a] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-200 dark:border-white/5 flex justify-between items-center">
-              <h3 className="font-serif text-xl text-slate-900 dark:text-white">Manage Tags</h3>
+              <h3 className="font-bold tracking-tight text-lg text-slate-900 dark:text-white">Manage Tags</h3>
               <button onClick={() => setEditingContact(null)} className="text-slate-500 hover:text-slate-900 dark:text-white transition-colors"><X className="w-5 h-5"/></button>
             </div>
             <div className="p-6">
@@ -172,7 +172,7 @@ export default function Contacts() {
               
               <div className="mb-6 flex flex-wrap gap-2">
                 {contactTags.map(t => (
-                  <div key={t} className="flex items-center px-3 py-1.5 bg-emerald-900/20 border border-emerald-500/20 rounded text-emerald-400 text-xs font-bold tracking-wider uppercase">
+                  <div key={t} className="flex items-center px-3 py-1.5 bg-primary-900/20 border border-primary-500/20 rounded text-primary-400 text-xs font-bold tracking-wider uppercase">
                     {t}
                     <button onClick={() => setContactTags(contactTags.filter(x => x !== t))} className="ml-2 hover:text-rose-400"><X className="w-3.5 h-3.5"/></button>
                   </div>
@@ -192,7 +192,7 @@ export default function Contacts() {
                      }
                    }}
                    placeholder="Add new tag (e.g. VIP)"
-                   className="flex-1 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors"
+                   className="flex-1 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors"
                 />
                 <button
                    onClick={() => {

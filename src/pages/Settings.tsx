@@ -90,26 +90,26 @@ export default function Settings() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div>
-        <h2 className="font-serif text-3xl text-slate-900 dark:text-white">Platform Settings</h2>
+        <h2 className="font-bold tracking-tight text-2xl text-slate-900 dark:text-white">Platform Settings</h2>
         <p className="text-xs text-slate-500 mt-1">Configure integrations, AI models, and WhatsApp connectivity.</p>
       </div>
 
       {/* WhatsApp Connection */}
       <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl p-8">
-        <h3 className="font-serif text-xl text-slate-900 dark:text-white mb-6 flex items-center">
-          <Smartphone className="w-5 h-5 mr-3 text-emerald-500" /> WhatsApp Device Link
+        <h3 className="font-bold tracking-tight text-lg text-slate-900 dark:text-white mb-6 flex items-center">
+          <Smartphone className="w-5 h-5 mr-3 text-primary-500" /> WhatsApp Device Link
         </h3>
         {waLoading ? (
            <div className="py-6 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-slate-500" /></div>
         ) : connected ? (
-           <div className="flex items-center justify-between p-6 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
+           <div className="flex items-center justify-between p-6 bg-primary-50 dark:bg-primary-900/10 border border-primary-200 dark:border-primary-500/20 rounded-xl">
              <div className="flex items-center">
-                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center mr-4">
-                  <Phone className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/40 rounded-full flex items-center justify-center mr-4">
+                  <Phone className="w-6 h-6 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
                   <h4 className="text-slate-900 dark:text-white font-medium">WhatsApp Connected</h4>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 uppercase tracking-widest font-mono">Session Active</p>
+                  <p className="text-xs text-primary-600 dark:text-primary-400 mt-1 uppercase tracking-widest font-mono">Session Active</p>
                 </div>
              </div>
              <button
@@ -156,8 +156,8 @@ export default function Settings() {
 
       {/* AI & Database Settings Form */}
       <form onSubmit={handleSave} className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl p-8 space-y-6">
-        <h3 className="font-serif text-xl text-slate-900 dark:text-white pb-4 border-b border-slate-200 dark:border-white/5 flex items-center">
-          <Database className="w-5 h-5 mr-3 text-emerald-500" /> Database Connection (MySQL)
+        <h3 className="font-bold tracking-tight text-lg text-slate-900 dark:text-white pb-4 border-b border-slate-200 dark:border-white/5 flex items-center">
+          <Database className="w-5 h-5 mr-3 text-primary-500" /> Database Connection (MySQL)
         </h3>
         
         <div className="space-y-4">
@@ -168,7 +168,7 @@ export default function Settings() {
                  type="text" 
                  value={settings.dbHost || ''} 
                  onChange={e => setSettings({...settings, dbHost: e.target.value})} 
-                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors" 
+                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
                  placeholder="localhost"
                />
              </div>
@@ -178,7 +178,7 @@ export default function Settings() {
                  type="text" 
                  value={settings.dbPort || ''} 
                  onChange={e => setSettings({...settings, dbPort: e.target.value})} 
-                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors" 
+                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
                  placeholder="3306"
                />
              </div>
@@ -188,7 +188,7 @@ export default function Settings() {
                  type="text" 
                  value={settings.dbName || ''} 
                  onChange={e => setSettings({...settings, dbName: e.target.value})} 
-                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors" 
+                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
                  placeholder="simplystart"
                />
              </div>
@@ -198,7 +198,7 @@ export default function Settings() {
                  type="text" 
                  value={settings.dbUser || ''} 
                  onChange={e => setSettings({...settings, dbUser: e.target.value})} 
-                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors" 
+                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
                  placeholder="root"
                />
              </div>
@@ -208,7 +208,7 @@ export default function Settings() {
                  type="password" 
                  value={settings.dbPassword || ''} 
                  onChange={e => setSettings({...settings, dbPassword: e.target.value})} 
-                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors" 
+                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
                  placeholder="••••••••"
                />
              </div>
@@ -216,12 +216,12 @@ export default function Settings() {
            
            <div className="flex items-center space-x-2 pt-2">
              <div className="text-[10px] uppercase tracking-widest font-bold text-slate-500">Status:</div>
-             <div className={`text-xs font-medium ${dbStatus.includes('Connected') ? 'text-emerald-500' : 'text-amber-500'}`}>{dbStatus}</div>
+             <div className={`text-xs font-medium ${dbStatus.includes('Connected') ? 'text-primary-500' : 'text-amber-500'}`}>{dbStatus}</div>
            </div>
         </div>
 
-        <h3 className="font-serif text-xl text-slate-900 dark:text-white pt-6 mb-6 flex items-center">
-          <Key className="w-5 h-5 mr-3 text-emerald-500" /> AI Integrations
+        <h3 className="font-bold tracking-tight text-lg text-slate-900 dark:text-white pt-6 mb-6 flex items-center">
+          <Key className="w-5 h-5 mr-3 text-primary-500" /> AI Integrations
         </h3>
         
         <div className="space-y-4">
@@ -231,7 +231,7 @@ export default function Settings() {
               type="password" 
               value={settings.geminiApiKey} 
               onChange={e => setSettings({...settings, geminiApiKey: e.target.value})} 
-              className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors" 
+              className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
               placeholder="AIzaSy..."
             />
           </div>
@@ -243,7 +243,7 @@ export default function Settings() {
                 type="text" 
                 value={settings.ollamaUrl} 
                 onChange={e => setSettings({...settings, ollamaUrl: e.target.value})} 
-                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors" 
+                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
                 placeholder="http://localhost:11434"
               />
             </div>
@@ -253,7 +253,7 @@ export default function Settings() {
                 type="text" 
                 value={settings.ollamaModel} 
                 onChange={e => setSettings({...settings, ollamaModel: e.target.value})} 
-                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors" 
+                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
                 placeholder="llama3"
               />
             </div>
@@ -262,7 +262,7 @@ export default function Settings() {
 
         <div className="pt-6 border-t border-slate-200 dark:border-white/5 flex items-center justify-between">
           <label className="flex items-center space-x-3 cursor-pointer">
-             <input type="checkbox" checked={settings.autoReplyEnabled} onChange={e => setSettings({...settings, autoReplyEnabled: e.target.checked})} className="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-slate-50 dark:bg-black/20 text-emerald-500 focus:ring-emerald-500" />
+             <input type="checkbox" checked={settings.autoReplyEnabled} onChange={e => setSettings({...settings, autoReplyEnabled: e.target.checked})} className="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-slate-50 dark:bg-black/20 text-primary-500 focus:ring-primary-500" />
              <div>
                <p className="text-sm text-slate-900 dark:text-white font-medium">Enable AI Auto-Responder</p>
                <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest">Responds automatically to unhandled queries</p>

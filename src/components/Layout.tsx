@@ -69,13 +69,13 @@ export default function Layout() {
             />
             <div className="hidden items-center">
               <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-3">
-                <path d="M 45 15 L 10 50 L 45 85 L 60 70 L 40 50 L 60 30 Z" fill="#FF3B30" />
-                <path d="M 40 30 L 60 50 L 40 70 L 55 85 L 90 50 L 55 15 Z" fill="#FF3B30" />
+                <path d="M 45 15 L 10 50 L 45 85 L 60 70 L 40 50 L 60 30 Z" fill="#ff6666" />
+                <path d="M 40 30 L 60 50 L 40 70 L 55 85 L 90 50 L 55 15 Z" fill="#ff6666" />
               </svg>
               <div className="flex flex-col font-sans justify-center leading-[0.95] tracking-[0.1em]">
                  <span className="text-[17px] font-black text-[#151D2A] dark:text-white uppercase leading-none">Simply</span>
                  <span className="text-[17px] font-black text-[#151D2A] dark:text-white uppercase leading-none pb-[2px]">
-                   Start<span className="text-[#FF3B30] font-black ml-[2px]">&gt;</span>
+                   Start<span className="text-[#ff6666] font-black ml-[2px]">&gt;</span>
                  </span>
               </div>
             </div>
@@ -93,7 +93,7 @@ export default function Layout() {
               className={({ isActive }) => cn(
                 "flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-colors",
                 isActive 
-                  ? "bg-slate-100 dark:bg-white/5 text-emerald-600 dark:text-emerald-400" 
+                  ? "bg-slate-100 dark:bg-white/5 text-primary-600 dark:text-primary-400" 
                   : "text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/[0.02]"
               )}
             >
@@ -103,9 +103,9 @@ export default function Layout() {
           ))}
         </nav>
         <div className="p-4 border-t border-slate-200 dark:border-white/5">
-          <div className="flex items-center space-x-3 bg-slate-100 dark:bg-emerald-900/10 border border-slate-200 dark:border-emerald-500/20 px-4 py-2 rounded-full">
-            <div className={cn("w-2 h-2 rounded-full", wsStatus ? "bg-emerald-500 dark:bg-emerald-400" : "bg-rose-500")} />
-            <span className={cn("text-xs font-medium tracking-wide uppercase", wsStatus ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-500")}>
+          <div className="flex items-center space-x-3 bg-slate-100 dark:bg-primary-900/10 border border-slate-200 dark:border-primary-500/20 px-4 py-2 rounded-full">
+            <div className={cn("w-2 h-2 rounded-full", wsStatus ? "bg-primary-500 dark:bg-primary-400" : "bg-rose-500")} />
+            <span className={cn("text-xs font-medium tracking-wide uppercase", wsStatus ? "text-primary-600 dark:text-primary-400" : "text-rose-600 dark:text-rose-500")}>
               {wsStatus ? "WhatsApp Linked" : "Disconnected"}
             </span>
           </div>
@@ -123,7 +123,7 @@ export default function Layout() {
               <Lucide.Menu className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-xl md:text-2xl font-serif italic text-slate-900 dark:text-white tracking-wide capitalize">
+              <h1 className="text-lg md:text-xl font-bold font-sans text-slate-900 dark:text-white tracking-tight capitalize">
                 {location.pathname === '/' ? 'Console Overview' : location.pathname.substring(1).replace('-', ' ')}
               </h1>
               <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mt-1">Intelligence & Deployment Console</p>
