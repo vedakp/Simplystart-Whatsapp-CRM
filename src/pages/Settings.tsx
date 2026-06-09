@@ -157,67 +157,29 @@ export default function Settings() {
       {/* AI & Database Settings Form */}
       <form onSubmit={handleSave} className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl p-8 space-y-6">
         <h3 className="font-bold tracking-tight text-lg text-slate-900 dark:text-white pb-4 border-b border-slate-200 dark:border-white/5 flex items-center">
-          <Database className="w-5 h-5 mr-3 text-primary-500" /> Database Connection (MySQL)
+          <Database className="w-5 h-5 mr-3 text-primary-500" /> Database Connection
         </h3>
         
         <div className="space-y-4">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div>
-               <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Host</label>
-               <input 
-                 type="text" 
-                 value={settings.dbHost || ''} 
-                 onChange={e => setSettings({...settings, dbHost: e.target.value})} 
-                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
-                 placeholder="localhost"
-               />
+           {dbStatus.includes('Connected') ? (
+             <div className="bg-primary-50 dark:bg-primary-900/10 border border-primary-200 dark:border-primary-500/20 rounded-xl p-6">
+               <h4 className="text-primary-600 dark:text-primary-400 font-medium">
+                 Database Connected
+               </h4>
+               <p className="text-xs text-primary-600/80 dark:text-primary-400/80 mt-1">
+                 Connection parameters are successfully loaded via environment variables.
+               </p>
              </div>
-             <div>
-               <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Port</label>
-               <input 
-                 type="text" 
-                 value={settings.dbPort || ''} 
-                 onChange={e => setSettings({...settings, dbPort: e.target.value})} 
-                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
-                 placeholder="3306"
-               />
+           ) : (
+             <div className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl p-6">
+               <h4 className="text-slate-900 dark:text-white font-medium">
+                 Database Not Connected
+               </h4>
+               <p className="text-xs text-slate-500 mt-1">
+                 Please configure your database connection parameters in the .env file.
+               </p>
              </div>
-             <div>
-               <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Database Name</label>
-               <input 
-                 type="text" 
-                 value={settings.dbName || ''} 
-                 onChange={e => setSettings({...settings, dbName: e.target.value})} 
-                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
-                 placeholder="simplystart"
-               />
-             </div>
-             <div>
-               <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Username</label>
-               <input 
-                 type="text" 
-                 value={settings.dbUser || ''} 
-                 onChange={e => setSettings({...settings, dbUser: e.target.value})} 
-                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
-                 placeholder="root"
-               />
-             </div>
-             <div>
-               <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Password</label>
-               <input 
-                 type="password" 
-                 value={settings.dbPassword || ''} 
-                 onChange={e => setSettings({...settings, dbPassword: e.target.value})} 
-                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
-                 placeholder="••••••••"
-               />
-             </div>
-           </div>
-           
-           <div className="flex items-center space-x-2 pt-2">
-             <div className="text-[10px] uppercase tracking-widest font-bold text-slate-500">Status:</div>
-             <div className={`text-xs font-medium ${dbStatus.includes('Connected') ? 'text-primary-500' : 'text-amber-500'}`}>{dbStatus}</div>
-           </div>
+           )}
         </div>
 
         <h3 className="font-bold tracking-tight text-lg text-slate-900 dark:text-white pt-6 mb-6 flex items-center">

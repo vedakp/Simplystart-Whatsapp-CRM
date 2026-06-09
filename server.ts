@@ -3,6 +3,9 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { v4 as uuidv4 } from "uuid";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // --- Real WhatsApp State ---
 process.on('unhandledRejection', (reason, promise) => {
@@ -38,30 +41,45 @@ let notes: any[] = [
 import { connectDB, models, isDBConnected } from './database';
 import fsPromises from 'fs/promises';
 
-async function initSettingsFromStorage() {
-  try {
-     const data = await fsPromises.readFile('local-settings.json', 'utf8');
-     settings = JSON.parse(data);
-     if (settings.dbHost) {
-        connectDB({
-          host: settings.dbHost, port: settings.dbPort, user: settings.dbUser,
-          password: settings.dbPassword, database: settings.dbName
-        });
-     }
-  } catch(e) {}
-}
-initSettingsFromStorage();
 let settings: any = {
-  dbHost: "",
-  dbPort: "3306",
-  dbUser: "",
-  dbPassword: "",
-  dbName: "simplystart",
   geminiApiKey: "",
   ollamaUrl: "http://localhost:11434",
   ollamaModel: "llama3",
   autoReplyEnabled: false
 };
+
+async function initSettingsFromStorage() {
+  try {
+     const data = await fsPromises.readFile('local-settings.json', 'utf8');
+     const parsedSettings = JSON.parse(data);
+     settings = { ...settings, ...parsedSettings };
+  } catch(e) {}
+  
+  // Connect to DB using .env
+  if (process.env.DB_HOST && process.env.DB_USER) {
+      await connectDB({
+          host: process.env.DB_HOST,
+          port: process.env.DB_PORT || 3306,
+          user: process.env.DB_USER,
+          password: process.env.DB_PASSWORD || "",
+          database: process.env.DB_NAME || "simplystart"
+      });
+      if (isDBConnected()) {
+        try {
+          const [dbSettingsRecord, created] = await models.Setting.findOrCreate({
+             where: { key: 'global_settings' },
+             defaults: { value: settings }
+          });
+          if (!created && dbSettingsRecord.value) {
+             settings = { ...settings, ...dbSettingsRecord.value };
+          }
+        } catch(e) {
+          console.error('Failed to load settings from DB:', e);
+        }
+      }
+  }
+}
+initSettingsFromStorage();
 
 let orders = [
   {
@@ -795,15 +813,18 @@ async function startServer() {
         await fsPromises.writeFile('local-settings.json', JSON.stringify(settings));
     } catch(e) {}
     
-    let dbStatus = "Not connected";
-    if (settings.dbHost && settings.dbUser) {
-        const result = await connectDB({
-             host: settings.dbHost, port: settings.dbPort, user: settings.dbUser,
-             password: settings.dbPassword, database: settings.dbName
-        });
-        dbStatus = result.message || "Connected successfully";
+    if (isDBConnected()) {
+        try {
+            await models.Setting.upsert({
+                key: 'global_settings',
+                value: settings
+            });
+        } catch(e) {
+            console.error('Failed to save settings to DB:', e);
+        }
     }
-    res.json({ settings, dbStatus });
+    
+    res.json({ settings, dbStatus: isDBConnected() ? "Connected successfully" : "Not connected" });
   });
 
   // 8. AI Generator Endpoint
