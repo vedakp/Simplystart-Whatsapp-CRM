@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Target, Plus, Loader2, DollarSign, Mail, Phone, Calendar } from 'lucide-react';
+import { Target, Plus, Loader2, DollarSign, Mail, Phone, Calendar, AlignLeft, Edit2 } from 'lucide-react';
 import { cn } from '../utils';
+import MarkdownEditor from '../components/MarkdownEditor';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function Leads() {
   const [leads, setLeads] = useState<any[]>([]);
@@ -8,7 +11,7 @@ export default function Leads() {
   const [showCreate, setShowCreate] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   
-  const [newLead, setNewLead] = useState({ name: '', phone: '', email: '', value: 0 });
+  const [newLead, setNewLead] = useState({ name: '', phone: '', email: '', value: 0, notes: '' });
 
   const fetchLeads = async () => {
     try {
@@ -91,10 +94,19 @@ export default function Leads() {
                   <div key={lead.id} className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 p-4 rounded-xl hover:border-primary-500/30 transition-colors group">
                     <div className="font-medium text-slate-900 dark:text-white text-sm mb-2">{lead.name}</div>
                     
-                    {lead.phone && <div className="flex items-center text-[10px] text-slate-500 mb-1"><Phone className="w-3 h-3 mr-1.5" /> {lead.phone}</div>}
-                    {lead.email && <div className="flex items-center text-[10px] text-slate-500 mb-2 truncate"><Mail className="w-3 h-3 mr-1.5" /> {lead.email}</div>}
+                    {lead.phone && <div className="flex items-center text-[10px] text-slate-500 mb-1"><Phone className="w-3 h-3 mr-1.5 shrink-0" /> <span className="truncate">{lead.phone}</span></div>}
+                    {lead.email && <div className="flex items-center text-[10px] text-slate-500 mb-3 truncate"><Mail className="w-3 h-3 mr-1.5 shrink-0" /> <span className="truncate">{lead.email}</span></div>}
                     
-                    <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-200 dark:border-white/5">
+                    {lead.notes && (
+                      <div className="text-[10px] text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-white/5 p-2 rounded-lg mb-3">
+                        <div className="flex items-center text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-widest"><AlignLeft className="w-3 h-3 mr-1"/> Notes</div>
+                        <div className="prose prose-sm dark:prose-invert prose-p:my-0.5 prose-ul:my-0.5 prose-li:my-0 text-[10px] max-h-24 overflow-y-auto custom-scrollbar pr-1">
+                           <ReactMarkdown remarkPlugins={[remarkGfm]}>{lead.notes}</ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between items-center mt-auto pt-3 border-t border-slate-200 dark:border-white/5">
                       <span className="text-xs text-primary-400 font-mono font-medium">${lead.value}</span>
                       <select 
                         value={lead.status}
@@ -135,6 +147,14 @@ export default function Leads() {
                 <div>
                   <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Potential Value ($)</label>
                   <input type="number" value={newLead.value} onChange={e => setNewLead({...newLead, value: parseInt(e.target.value) || 0})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Description / Notes</label>
+                  <MarkdownEditor 
+                     value={newLead.notes} 
+                     onChange={(val) => setNewLead({...newLead, notes: val})} 
+                     placeholder="Lead description, requirements, etc..." 
+                  />
                 </div>
                 <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-white/5 space-x-3">
                   <button type="button" onClick={() => setShowCreate(false)} className="px-5 py-2.5 text-[10px] font-bold tracking-widest uppercase text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors">Cancel</button>

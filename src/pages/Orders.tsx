@@ -22,12 +22,13 @@ export default function Orders() {
   const navigate = useNavigate();
 
   // New order form data
-  const [newOrder, setNewOrder] = useState({
-    customerName: '',
-    customerPhone: '',
-    itemName: '',
-    price: '',
-  });
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [items, setItems] = useState<{name: string, quantity: number, price: number}[]>([
+    { name: '', quantity: 1, price: 0 }
+  ]);
+
+  const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   const fetchOrders = async () => {
     try {
@@ -50,11 +51,8 @@ export default function Orders() {
     const s = location.state as any;
     if (s?.createOrderPhone) {
       setShowCreate(true);
-      setNewOrder(prev => ({
-        ...prev,
-        customerName: s.createOrderName || '',
-        customerPhone: s.createOrderPhone || '',
-      }));
+      setCustomerName(s.createOrderName || '');
+      setCustomerPhone(s.createOrderPhone || '');
       // Clear state so it doesn't reopen on refresh
       navigate('.', { replace: true, state: {} });
     }
@@ -64,11 +62,19 @@ export default function Orders() {
     e.preventDefault();
     setIsCreating(true);
     
+    // Filter out items without a name
+    const validItems = items.filter(i => i.name.trim() !== '');
+    if (validItems.length === 0) {
+      alert("Please add at least one item.");
+      setIsCreating(false);
+      return;
+    }
+
     const payload = {
-      customerName: newOrder.customerName,
-      customerPhone: newOrder.customerPhone,
-      items: [{ name: newOrder.itemName, quantity: 1, price: Number(newOrder.price) }],
-      totalAmount: Number(newOrder.price)
+      customerName,
+      customerPhone,
+      items: validItems,
+      totalAmount
     };
 
     try {
@@ -79,7 +85,9 @@ export default function Orders() {
       });
       await fetchOrders();
       setShowCreate(false);
-      setNewOrder({ customerName: '', customerPhone: '', itemName: '', price: '' });
+      setCustomerName('');
+      setCustomerPhone('');
+      setItems([{ name: '', quantity: 1, price: 0 }]);
     } finally {
       setIsCreating(false);
     }
@@ -220,9 +228,10 @@ export default function Orders() {
               <div className="grid grid-cols-2 gap-5 relative">
                 <div className="col-span-2">
                   <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Customer Name</label>
-                  <input required type="text" list="contacts-list" value={newOrder.customerName} onChange={e => {
+                  <input required type="text" list="contacts-list" value={customerName} onChange={e => {
                     const matchedContact = contacts.find(c => c.name === e.target.value);
-                    setNewOrder({...newOrder, customerName: e.target.value, customerPhone: matchedContact ? matchedContact.phone : newOrder.customerPhone});
+                    setCustomerName(e.target.value);
+                    if (matchedContact) setCustomerPhone(matchedContact.phone);
                   }} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" />
                   <datalist id="contacts-list">
                     {contacts.map(c => <option key={c.id} value={c.name}>{c.phone}</option>)}
@@ -230,15 +239,86 @@ export default function Orders() {
                 </div>
                 <div className="col-span-2">
                   <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Phone Number</label>
-                  <input required type="text" placeholder="+1234567890" value={newOrder.customerPhone} onChange={e => setNewOrder({...newOrder, customerPhone: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:border-primary-500/50 transition-colors" />
+                  <input required type="text" placeholder="+1234567890" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:border-primary-500/50 transition-colors" />
                 </div>
-                <div className="col-span-1">
-                  <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Item Name</label>
-                  <input required type="text" value={newOrder.itemName} onChange={e => setNewOrder({...newOrder, itemName: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" />
+              </div>
+
+              <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4">
+                <div className="flex justify-between items-center mb-4">
+                  <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500">Order Items</label>
+                  <button 
+                    type="button" 
+                    onClick={() => setItems([...items, { name: '', quantity: 1, price: 0 }])}
+                    className="text-[10px] uppercase tracking-widest font-bold text-primary-500 hover:text-primary-600 transition-colors flex items-center"
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Add Item
+                  </button>
                 </div>
-                <div className="col-span-1">
-                  <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Price ($)</label>
-                  <input required type="number" step="0.01" min="0" value={newOrder.price} onChange={e => setNewOrder({...newOrder, price: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:border-primary-500/50 transition-colors" />
+                
+                <div className="space-y-3 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                  {items.map((item, index) => (
+                    <div key={index} className="flex space-x-2 items-start bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/5 p-2.5 rounded-lg">
+                      <div className="flex-1">
+                        <input 
+                          required 
+                          type="text" 
+                          placeholder="Item name"
+                          value={item.name} 
+                          onChange={e => {
+                            const newItems = [...items];
+                            newItems[index].name = e.target.value;
+                            setItems(newItems);
+                          }} 
+                          className="w-full bg-transparent border-b border-transparent hover:border-slate-300 dark:hover:border-white/20 focus:border-primary-500 focus:outline-none px-1 py-1 text-slate-900 dark:text-white text-sm transition-colors mb-2" 
+                        />
+                        <div className="flex items-center space-x-3 px-1">
+                          <div className="flex items-center space-x-2 text-xs">
+                            <span className="text-slate-500">Qty:</span>
+                            <input 
+                              type="number" min="1" 
+                              value={item.quantity || ''} 
+                              onChange={e => {
+                                const newItems = [...items];
+                                newItems[index].quantity = parseInt(e.target.value) || 0;
+                                setItems(newItems);
+                              }}
+                              className="w-12 bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded px-1.5 py-0.5 focus:outline-none focus:border-primary-500/50"
+                            />
+                          </div>
+                          <div className="flex items-center space-x-2 text-xs">
+                            <span className="text-slate-500">Price: $</span>
+                            <input 
+                              type="number" step="0.01" min="0" 
+                              value={item.price === 0 && item.name === '' ? '' : item.price} 
+                              onChange={e => {
+                                const newItems = [...items];
+                                newItems[index].price = parseFloat(e.target.value) || 0;
+                                setItems(newItems);
+                              }}
+                              className="w-20 bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded px-1.5 py-0.5 focus:outline-none focus:border-primary-500/50"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          if (items.length > 1) {
+                            setItems(items.filter((_, i) => i !== index));
+                          }
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-red-500 rounded-md transition-colors disabled:opacity-30"
+                        disabled={items.length === 1}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="flex justify-between items-center mt-4 bg-slate-100 dark:bg-white/[0.05] p-3 rounded-lg border border-slate-200 dark:border-white/10">
+                  <span className="text-xs uppercase tracking-widest font-bold text-slate-500">Total Value</span>
+                  <span className="text-base font-mono font-bold text-primary-500">${totalAmount.toFixed(2)}</span>
                 </div>
               </div>
               

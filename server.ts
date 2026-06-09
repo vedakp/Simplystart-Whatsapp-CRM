@@ -556,7 +556,18 @@ async function startServer() {
   app.get("/api/orders", async (req, res) => {
     if (isDBConnected()) {
       const dbOrders = await models.Order.findAll();
-      return res.json(dbOrders.map((o:any) => o.toJSON()));
+      return res.json(dbOrders.map((o:any) => {
+        const json = o.toJSON();
+        if (typeof json.items === 'string') {
+          try { json.items = JSON.parse(json.items); } catch(e){}
+        }
+        if (typeof json.logs === 'string') {
+          try { json.logs = JSON.parse(json.logs); } catch(e){}
+        }
+        if (!Array.isArray(json.items)) json.items = [];
+        if (!Array.isArray(json.logs)) json.logs = [];
+        return json;
+      }));
     }
     res.json(orders);
   });
