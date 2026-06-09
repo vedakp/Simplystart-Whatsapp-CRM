@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquareShare, Plus, Loader2, Send, RefreshCw, Users, Info, Sparkles, X } from 'lucide-react';
 import { cn } from '../utils';
+import AIPromptModal from '../components/AIPromptModal';
 
 export default function Campaigns() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -12,9 +13,11 @@ export default function Campaigns() {
   const [filter, setFilter] = useState('All');
   
   const [messageTemplate, setMessageTemplate] = useState('');
-  const [aiGenerating, setAiGenerating] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
   const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [delaySeconds, setDelaySeconds] = useState(2);
+  const [targetTags, setTargetTags] = useState('');
+  const [targetGroups, setTargetGroups] = useState<string[]>([]);
 
   const filteredCampaigns = campaigns.filter(camp => {
     if (filter === 'Running') return camp.status === 'Sending';
@@ -59,47 +62,85 @@ export default function Campaigns() {
     return () => clearInterval(iv);
   }, []);
 
-  const handleAIGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!aiPrompt.trim()) return;
-    setAiGenerating(true);
-    try {
-      const res = await fetch('/api/ai/generate', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-           prompt: aiPrompt,
-           context: "You are an expert marketing copywriter for WhatsApp. Write a short, engaging broadcast message based on the user's prompt. Use placeholders like {{name}} where appropriate. Do NOT include any conversation context, just the final template text."
-        })
-      });
-      const data = await res.json();
-      if (data.result) {
-        setMessageTemplate(data.result);
-      }
-    } catch(err) {
-      console.error(err);
-    } finally {
-      setAiGenerating(false);
-      setAiModalOpen(false);
-      setAiPrompt('');
+  const getPreviewTargets = () => {
+    let targets: any[] = [];
+    
+    if (targetGroups.length > 0) {
+       targets = targets.concat(groups.filter(c => targetGroups.includes(c.id)));
     }
+
+    const tagList = targetTags.split(',').map(s => s.trim()).filter(Boolean);
+    if (tagList.length > 0) {
+      targets = targets.concat(contacts.filter(c => c.tags && c.tags.some((t: string) => tagList.includes(t))));
+    }
+    
+    if (selectedContacts.length > 0) {
+      targets = targets.concat(contacts.filter(c => selectedContacts.includes(c.id)));
+    }
+
+    if (!tagList.length && !targetGroups.length && !selectedContacts.length) {
+      targets = targets.concat(contacts);
+    }
+
+    // Deduplicate
+    targets = Array.from(new Set(targets.map(a => a.id))).map(id => {
+      return targets.find(a => a.id === id);
+    });
+
+    return targets;
   };
+
+  const previewTargets = getPreviewTargets();
+
+  const [step, setStep] = useState(1);
+  const [campaignName, setCampaignName] = useState('');
+  const [mediaList, setMediaList] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchMediaList();
+  }, []);
+
+  const fetchMediaList = async () => {
+    try {
+      const res = await fetch('/api/media');
+      const data = await res.json();
+      setMediaList(data);
+    } catch {}
+  };
+
+  const handleUploadInline = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('/api/media', { method: 'POST', body: formData });
+      const data = await res.json();
+      setImageUrl(data.url);
+      await fetchMediaList();
+    } catch {}
+  };
+
+  const nextStep = () => setStep(s => Math.min(s + 1, 4));
+  const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (step < 4) {
+      nextStep();
+      return;
+    }
+    
     setIsCreating(true);
     
-    const formData = new FormData(e.currentTarget);
-    const targetTags = formData.get('tags')?.toString().split(',').map(s => s.trim()).filter(Boolean) || [];
+    const resolvedTags = targetTags.split(',').map(s => s.trim()).filter(Boolean);
     
-    // get selected groups
-    const select = e.currentTarget.elements.namedItem('groups') as HTMLSelectElement;
-    const targetGroups = Array.from(select.selectedOptions).map(opt => opt.value).filter(Boolean);
-
     const payload = {
-      name: formData.get('name'),
-      messageTemplate: messageTemplate,
-      targetTags,
+      name: campaignName,
+      messageTemplate,
+      image: imageUrl,
+      delaySeconds,
+      targetTags: resolvedTags,
       targetGroups,
       targetContacts: selectedContacts
     };
@@ -111,9 +152,14 @@ export default function Campaigns() {
         body: JSON.stringify(payload)
       });
       await fetchCampaigns();
-      (e.target as HTMLFormElement).reset();
+      
+      setCampaignName('');
       setMessageTemplate('');
       setSelectedContacts([]);
+      setTargetTags('');
+      setTargetGroups([]);
+      setImageUrl('');
+      setStep(1);
     } finally {
       setIsCreating(false);
     }
@@ -138,130 +184,214 @@ export default function Campaigns() {
             </h3>
             
             <form onSubmit={handleCreate} className="space-y-5">
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Campaign Name</label>
-                <input 
-                  required
-                  name="name"
-                  type="text" 
-                  placeholder="e.g. Summer Promo" 
-                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors"
-                />
+              <div className="flex items-center justify-between mb-4">
+                 {[1, 2, 3, 4].map(s => (
+                    <div key={s} className="flex items-center">
+                       <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors", step >= s ? "bg-primary-500 text-white" : "bg-slate-200 dark:bg-white/10 text-slate-500")}>
+                         {s}
+                       </div>
+                       {s < 4 && <div className={cn("w-8 h-1 mx-1 rounded-full", step > s ? "bg-primary-500" : "bg-slate-200 dark:bg-white/10")} />}
+                    </div>
+                 ))}
               </div>
 
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Target Tags (comma separated)</label>
-                <input 
-                  name="tags"
-                  type="text" 
-                  placeholder="e.g. VIP, Customer" 
-                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Target WhatsApp Groups</label>
-                <select 
-                  name="groups"
-                  multiple
-                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-primary-500/50 transition-colors text-sm min-h-[80px]"
-                >
-                  <option disabled value="" className="text-slate-500 italic">Select groups (Ctrl/Cmd to pick multiple)</option>
-                  {groups.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
-                <p className="text-[10px] text-slate-600 mt-2">Leave tags and groups empty to message all contacts.</p>
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Target Contacts (Optional)</label>
-                <div className="max-h-32 overflow-y-auto w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg p-2 text-slate-900 dark:text-white space-y-1">
-                  {contacts.map(c => (
-                     <label key={c.id} className="flex items-center space-x-2 text-sm cursor-pointer p-1 hover:bg-slate-200 dark:hover:bg-white/5 rounded">
-                       <input 
-                          type="checkbox" 
-                          checked={selectedContacts.includes(c.id)}
-                          onChange={(e) => {
-                             if(e.target.checked) setSelectedContacts([...selectedContacts, c.id]);
-                             else setSelectedContacts(selectedContacts.filter(id => id !== c.id));
-                          }}
-                          className="rounded border-slate-300 dark:border-white/20 text-primary-500 focus:ring-primary-500" 
-                       />
-                       <span>{c.name}</span>
-                     </label>
-                  ))}
-                  {contacts.length === 0 && <div className="text-xs text-slate-500 p-1">No contacts available</div>}
+              {step === 1 && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Campaign Name</label>
+                    <input 
+                      required
+                      name="name"
+                      type="text" 
+                      value={campaignName}
+                      onChange={e => setCampaignName(e.target.value)}
+                      placeholder="e.g. Summer Promo" 
+                      className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 flex justify-between">
+                      <span>Message Body <span className="text-primary-500 ml-1">Use {'{{name}}'}</span></span>
+                      <button 
+                        type="button" 
+                        onClick={(e) => { e.preventDefault(); setAiModalOpen(true); }}
+                        className="text-purple-500 hover:text-purple-400 flex items-center transition-colors"
+                      >
+                         <Sparkles className="w-3 h-3 mr-1" />
+                         Auto-Write
+                      </button>
+                    </label>
+                    <textarea 
+                      required
+                      name="messageTemplate"
+                      rows={6}
+                      value={messageTemplate}
+                      onChange={(e) => setMessageTemplate(e.target.value)}
+                      placeholder="Hello {{name}}, check out our new update..." 
+                      className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors resize-none"
+                    />
+                  </div>
                 </div>
+              )}
+
+              {step === 2 && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Target Tags (comma separated)</label>
+                    <input 
+                      name="tags"
+                      type="text"
+                      value={targetTags}
+                      onChange={e => setTargetTags(e.target.value)}
+                      placeholder="e.g. VIP, Customer" 
+                      className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Target WhatsApp Groups</label>
+                    <select 
+                      name="groups"
+                      multiple
+                      value={targetGroups}
+                      onChange={(e) => {
+                        const options = Array.from(e.target.selectedOptions, option => option.value);
+                        setTargetGroups(options);
+                      }}
+                      className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-primary-500/50 transition-colors text-sm min-h-[80px]"
+                    >
+                      <option disabled value="" className="text-slate-500 italic">Select groups (Ctrl/Cmd to pick multiple)</option>
+                      {groups.map(g => (
+                        <option key={g.id} value={g.id}>{g.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Target Contacts (Optional)</label>
+                    <div className="max-h-32 overflow-y-auto w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg p-2 text-slate-900 dark:text-white space-y-1">
+                      {contacts.map(c => (
+                         <label key={c.id} className="flex items-center space-x-2 text-sm cursor-pointer p-1 hover:bg-slate-200 dark:hover:bg-white/5 rounded">
+                           <input 
+                              type="checkbox" 
+                              checked={selectedContacts.includes(c.id)}
+                              onChange={(e) => {
+                                 if(e.target.checked) setSelectedContacts([...selectedContacts, c.id]);
+                                 else setSelectedContacts(selectedContacts.filter(id => id !== c.id));
+                              }}
+                              className="rounded border-slate-300 dark:border-white/20 text-primary-500 focus:ring-primary-500" 
+                           />
+                           <span>{c.name}</span>
+                         </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {step === 3 && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Select Media (Optional)</label>
+                    <div className="grid grid-cols-3 gap-2 mb-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                      {mediaList.map(item => (
+                         <div 
+                           key={item.id} 
+                           onClick={() => setImageUrl(imageUrl === item.url ? '' : item.url)}
+                           className={cn("cursor-pointer border-2 rounded-lg overflow-hidden aspect-square transition-all", imageUrl === item.url ? 'border-primary-500 scale-[0.98]' : 'border-slate-200 dark:border-white/10 hover:border-primary-300')}
+                         >
+                           <img src={item.url} alt={item.originalName} className="w-full h-full object-cover" />
+                         </div>
+                      ))}
+                    </div>
+                    <label className="flex items-center justify-center w-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-dashed border-slate-300 dark:border-white/20 p-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors">
+                      <input type="file" onChange={handleUploadInline} className="hidden" accept="image/*" />
+                      + Upload New Image
+                    </label>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Delay per message (sec)</label>
+                    <input 
+                      name="delay"
+                      type="number"
+                      min="1"
+                      value={delaySeconds}
+                      onChange={e => setDelaySeconds(parseInt(e.target.value) || 1)}
+                      className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {step === 4 && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="p-4 bg-slate-100 dark:bg-black/40 rounded-lg border border-slate-200 dark:border-white/10">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold text-primary-500">Target Audience</span>
+                      <span className="text-xs font-bold bg-white dark:bg-black px-2 py-0.5 rounded-full border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">{previewTargets.length}</span>
+                    </div>
+                    <div className="max-h-24 overflow-y-auto custom-scrollbar">
+                      {previewTargets.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {previewTargets.slice(0, 20).map(t => (
+                            <span key={t.id} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300">
+                              {t.name}
+                            </span>
+                          ))}
+                          {previewTargets.length > 20 && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded text-slate-500">+{previewTargets.length - 20} more</span>
+                          )}
+                        </div>
+                      ) : (
+                         <span className="text-xs text-slate-400 italic">No contacts matched</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 p-4 rounded-lg flex flex-col items-start">
+                    <h4 className="font-bold text-xs mb-1 text-slate-900 dark:text-white">{campaignName || 'Unnamed'}</h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 mb-2 w-full">{messageTemplate || 'No message'}</p>
+                    {imageUrl && <img src={imageUrl} alt="attached" className="w-16 h-16 object-cover rounded-md border border-slate-200 dark:border-white/10 mb-2" />}
+                    <p className="text-[10px] text-slate-500 font-mono">Delay: {delaySeconds}s</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-white/10">
+                {step > 1 ? (
+                   <button type="button" onClick={prevStep} className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                     Back
+                   </button>
+                ) : <div/>}
+                
+                <button
+                  type="submit"
+                  disabled={isCreating}
+                  className="px-4 py-2 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-full font-semibold transition-colors flex items-center justify-center disabled:opacity-50 text-[10px] uppercase tracking-widest"
+                >
+                  {isCreating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                  {step < 4 ? 'Next Step' : (isCreating ? 'Creating...' : 'Launch Campaign')}
+                </button>
               </div>
 
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 flex justify-between">
-                  <span>Message Body <span className="text-primary-500 ml-1">Use {'{{name}}'}</span></span>
-                  <button 
-                    type="button" 
-                    onClick={(e) => { e.preventDefault(); setAiModalOpen(true); }}
-                    className="text-purple-500 hover:text-purple-400 flex items-center transition-colors"
-                  >
-                     <Sparkles className="w-3 h-3 mr-1" />
-                     Auto-Write
-                  </button>
-                </label>
-                <textarea 
-                  required
-                  name="messageTemplate"
-                  rows={5}
-                  value={messageTemplate}
-                  onChange={(e) => setMessageTemplate(e.target.value)}
-                  placeholder="Hello {{name}}, check out our new update..." 
-                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 transition-colors resize-none"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isCreating}
-                className="w-full py-2.5 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-full font-semibold transition-colors flex items-center justify-center disabled:opacity-50 text-[10px] uppercase tracking-widest mt-4"
-              >
-                {isCreating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                {isCreating ? 'Launching...' : 'Launch Campaign'}
-              </button>
             </form>
 
-            {/* AI Generator Modal */}
-            {aiModalOpen && (
-              <div className="absolute inset-0 bg-white/80 dark:bg-[#07080a]/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-4">
-                <div className="bg-white dark:bg-[#0a0b0d] border border-slate-200 dark:border-white/10 p-5 rounded-2xl w-full max-w-sm shadow-xl">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold tracking-tight text-[15px] text-slate-900 dark:text-white flex items-center">
-                      <Sparkles className="w-4 h-4 mr-2 text-purple-500" /> AI Writer
-                    </h3>
-                    <button onClick={() => setAiModalOpen(false)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <form onSubmit={handleAIGenerate}>
-                    <textarea
-                      autoFocus
-                      value={aiPrompt}
-                      onChange={e => setAiPrompt(e.target.value)}
-                      placeholder="E.g., Write a festive 20% off promo..."
-                      className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg p-3 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500/50 resize-none h-24 mb-3"
-                    />
-                    <div className="flex justify-end">
-                      <button
-                        type="submit"
-                        disabled={aiGenerating || !aiPrompt.trim()}
-                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center disabled:opacity-50"
-                      >
-                        {aiGenerating ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Sparkles className="w-3 h-3 mr-2" />}
-                        Generate
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
+      <AIPromptModal 
+        isOpen={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+        onGenerate={async (prompt) => {
+          const res = await fetch('/api/ai/generate', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+               prompt: prompt,
+               context: "You are an expert marketing copywriter for WhatsApp. Write a short, engaging broadcast message based on the user's prompt. Use placeholders like {{name}} where appropriate. Do NOT include any conversation context, just the final template text."
+            })
+          });
+          const data = await res.json();
+          if (data.result) {
+            setMessageTemplate(data.result);
+          }
+        }}
+      />
           </div>
         </div>
 

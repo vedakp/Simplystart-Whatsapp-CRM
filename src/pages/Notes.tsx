@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Plus, Loader2, Save, Trash2, Edit3, AlignLeft, Sparkles, X } from 'lucide-react';
 import { cn } from '../utils';
+import AIPromptModal from '../components/AIPromptModal';
 
 export default function Notes() {
   const [notes, setNotes] = useState<any[]>([]);
@@ -14,8 +15,6 @@ export default function Notes() {
   
   // AI State
   const [aiModalOpen, setAiModalOpen] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [aiGenerating, setAiGenerating] = useState(false);
 
   const fetchNotes = async () => {
     try {
@@ -83,32 +82,6 @@ export default function Notes() {
     } catch(e) {}
   };
 
-  const handleAIGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!aiPrompt.trim()) return;
-    setAiGenerating(true);
-    try {
-      const res = await fetch('/api/ai/generate', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-           prompt: aiPrompt,
-           context: "You are an AI assistant helping to write a note. Continue or generate text based on the user's prompt. Do NOT include generic conversational text, only the requested content directly, because it will be appended to the current user's note."
-        })
-      });
-      const data = await res.json();
-      if (data.result) {
-        setContent(prev => prev + (prev.length > 0 ? '\n\n' : '') + data.result);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setAiGenerating(false);
-      setAiModalOpen(false);
-      setAiPrompt('');
-    }
-  };
-
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col md:flex-row gap-6">
       {/* Sidebar - Note List */}
@@ -162,40 +135,24 @@ export default function Notes() {
 
       {/* Main Editor Area */}
       <div className="flex-1 flex flex-col bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden relative">
-        {aiModalOpen && (
-           <div className="absolute inset-0 bg-white/80 dark:bg-[#07080a]/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6">
-              <div className="bg-white dark:bg-[#0a0b0d] border border-slate-200 dark:border-white/10 p-6 rounded-2xl shadow-2xl w-full max-w-lg">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold tracking-tight text-base text-slate-900 dark:text-white flex items-center">
-                    <Sparkles className="w-5 h-5 mr-2 text-purple-500" />
-                    Ask AI Writer
-                  </h3>
-                  <button onClick={() => setAiModalOpen(false)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                <form onSubmit={handleAIGenerate}>
-                  <textarea
-                    autoFocus
-                    value={aiPrompt}
-                    onChange={e => setAiPrompt(e.target.value)}
-                    placeholder="E.g., Write a draft email about our new product launch..."
-                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500/50 resize-none h-32 mb-4"
-                  />
-                  <div className="flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={aiGenerating || !aiPrompt.trim()}
-                      className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-full font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center disabled:opacity-50"
-                    >
-                      {aiGenerating ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-2" />}
-                      Generate & Append
-                    </button>
-                  </div>
-                </form>
-              </div>
-           </div>
-        )}
+        <AIPromptModal 
+          isOpen={aiModalOpen}
+          onClose={() => setAiModalOpen(false)}
+          onGenerate={async (prompt) => {
+            const res = await fetch('/api/ai/generate', {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ 
+                 prompt: prompt,
+                 context: "You are an AI assistant helping to write a note. Continue or generate text based on the user's prompt. Do NOT include generic conversational text, only the requested content directly, because it will be appended to the current user's note."
+              })
+            });
+            const data = await res.json();
+            if (data.result) {
+              setContent(prev => prev + (prev.length > 0 ? '\n\n' : '') + data.result);
+            }
+          }}
+        />
 
         {selectedNote ? (
           <>

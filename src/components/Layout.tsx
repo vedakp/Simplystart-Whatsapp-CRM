@@ -13,6 +13,7 @@ const navItems = [
   { path: '/campaigns', label: 'Campaigns', icon: Lucide.MessageSquareShare },
   { path: '/contacts', label: 'Contacts', icon: Lucide.Users },
   { path: '/notes', label: 'Notes', icon: Lucide.FileText },
+  { path: '/media', label: 'Media', icon: Lucide.Image },
   { path: '/settings', label: 'Settings', icon: Lucide.Settings2 },
 ];
 

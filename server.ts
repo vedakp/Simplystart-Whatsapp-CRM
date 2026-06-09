@@ -5,6 +5,7 @@ import { createServer as createViteServer } from "vite";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
 import { Ollama } from "ollama";
+import multer from "multer";
 
 dotenv.config();
 
@@ -146,7 +147,7 @@ async function generateAIResponse(prompt: string, systemInstruction?: string): P
       return response.message.content || "No response generated";
     } catch (e: any) {
       console.error("Ollama Error:", e);
-      return "Error generating response via Ollama.";
+      return `Error generating response via Ollama: ${e.message}`;
     }
   }
   return "AI is not configured. Please add Gemini API key or Ollama URL in settings.";
@@ -161,7 +162,22 @@ setInterval(async () => {
   if (task) {
     try {
       if (task.jid) {
-        await sock.sendMessage(task.jid, { text: task.message });
+        if (task.image) {
+           let imagePayload = { url: task.image };
+           if (task.image.startsWith('/uploads/')) {
+             try {
+               const localPath = path.join(process.cwd(), task.image);
+               imagePayload = fs.readFileSync(localPath) as any;
+             } catch(e) {}
+           }
+           if ((imagePayload as any).url || Buffer.isBuffer(imagePayload)) {
+              await sock.sendMessage(task.jid, { image: imagePayload, caption: task.message });
+           } else {
+              await sock.sendMessage(task.jid, { text: task.message });
+           }
+        } else {
+           await sock.sendMessage(task.jid, { text: task.message });
+        }
         console.log(`Successfully sent message to ${task.jid}`);
       }
       
@@ -170,6 +186,9 @@ setInterval(async () => {
         camp.sentCount = (camp.sentCount || 0) + 1;
         if (camp.sentCount >= camp.targets && camp.status !== "Completed") {
            camp.status = "Completed";
+           if (isDBConnected()) {
+             models.Campaign.update({ status: "Completed" }, { where: { id: camp.id } }).catch(()=>{});
+           }
         }
       }
     } catch (error) {
@@ -182,11 +201,14 @@ setInterval(async () => {
     const camp = campaigns.find(c => c.id === task.campId);
     if (camp && !messageQueue.some(m => m.campId === camp.id) && camp.sentCount >= camp.targets) {
       camp.status = "Completed";
+      if (isDBConnected()) {
+        models.Campaign.update({ status: "Completed" }, { where: { id: camp.id } }).catch(()=>{});
+      }
     }
   }
 
-  // 1 to 3 seconds delay
-  const delay = Math.floor(Math.random() * 2000) + 1000;
+  // Use task delay or default 1 to 3 seconds delay
+  const delay = task?.delaySeconds ? task.delaySeconds * 1000 : (Math.floor(Math.random() * 2000) + 1000);
   setTimeout(() => {
     isProcessingQueue = false;
   }, delay);
@@ -311,6 +333,21 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json());
+  
+  const uploadDir = path.join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+  
+  const storage = multer.diskStorage({
+    destination: uploadDir,
+    filename: (req, file, cb) => {
+      cb(null, `${Date.now()}-${file.originalname}`);
+    }
+  });
+  const upload = multer({ storage });
+  
+  app.use('/uploads', express.static(uploadDir));
 
   // Init whatsapp
   connectToWhatsApp().catch(err => console.error('WhatsApp Init Error:', err));
@@ -455,7 +492,7 @@ async function startServer() {
   });
 
   app.post("/api/campaigns", async (req, res) => {
-    const { name, messageTemplate, targetTags, targetGroups, targetContacts } = req.body;
+    const { name, messageTemplate, targetTags, targetGroups, targetContacts, image, delaySeconds } = req.body;
     
     // Auto-match contacts based on tags or send to all if empty
     let targets: any[] = [];
@@ -486,6 +523,8 @@ async function startServer() {
       name,
       messageTemplate: messageTemplate || "",
       targets: targets.length,
+      image: image || "",
+      delaySeconds: delaySeconds && !isNaN(parseInt(delaySeconds)) ? Math.max(1, parseInt(delaySeconds)) : 2,
       status: isWhatsAppConnected && targets.length > 0 ? "Sending" : "Failed",
       createdAt: new Date().toISOString()
     };
@@ -503,6 +542,8 @@ async function startServer() {
         messageQueue.push({
            jid: t.jid, 
            message: (messageTemplate || "").replace(/\{\{name\}\}/gi, t.name || ""), 
+           image: newCampaign.image,
+           delaySeconds: newCampaign.delaySeconds,
            campId: newCampaign.id 
         });
       });
@@ -728,6 +769,62 @@ async function startServer() {
     }
   });
 
+  // 4b. Media
+  app.get("/api/media", async (req, res) => {
+    if (isDBConnected()) {
+      const dbMedia = await models.Media.findAll({ order: [['createdAt', 'DESC']] });
+      return res.json(dbMedia.map((m:any) => m.toJSON()));
+    }
+    res.json([]);
+  });
+
+  app.post("/api/media", upload.single('file'), async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: "No file provided" });
+    
+    const mediaObj = {
+      id: uuidv4(),
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      url: `/uploads/${req.file.filename}`,
+      createdAt: new Date().toISOString()
+    };
+    
+    if (isDBConnected()) {
+      const allMedia = await models.Media.findAll({ order: [['createdAt', 'DESC']] });
+      if (allMedia.length >= 10) {
+        // Delete oldest ones
+        for (let i = 9; i < allMedia.length; i++) {
+           const old = allMedia[i];
+           await old.destroy();
+           try { fs.unlinkSync(path.join(uploadDir, old.filename)); } catch(e){}
+        }
+      }
+      await models.Media.create(mediaObj);
+      res.json(mediaObj);
+    } else {
+       // if not DB, delete it immediately as we cant track
+       try { fs.unlinkSync(path.join(uploadDir, req.file.filename)); } catch(e){}
+       res.status(500).json({ error: "Database not connected" });
+    }
+  });
+
+  app.delete("/api/media/:id", async (req, res) => {
+    if (isDBConnected()) {
+      const media = await models.Media.findByPk(req.params.id);
+      if (media) {
+        await media.destroy();
+        try { fs.unlinkSync(path.join(uploadDir, media.filename)); } catch(e){}
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "Not found" });
+      }
+    } else {
+      res.status(500).json({ error: "Database not connected" });
+    }
+  });
+
   // 5. Leads
   app.get("/api/leads", async (req, res) => {
     if (isDBConnected()) {
@@ -815,16 +912,10 @@ async function startServer() {
   });
 
   // 7. Settings
-  app.get("/api/settings", (req, res) => {
-    res.json({ settings, dbStatus: isDBConnected() ? "Connected successfully" : "Not connected" });
-  });
-
-  app.post("/api/settings", async (req, res) => {
-    settings = { ...settings, ...req.body };
+  async function persistSettings() {
     try {
         await fsPromises.writeFile('local-settings.json', JSON.stringify(settings));
     } catch(e) {}
-    
     if (isDBConnected()) {
         try {
             await models.Setting.upsert({
@@ -835,7 +926,15 @@ async function startServer() {
             console.error('Failed to save settings to DB:', e);
         }
     }
-    
+  }
+
+  app.get("/api/settings", (req, res) => {
+    res.json({ settings, dbStatus: isDBConnected() ? "Connected successfully" : "Not connected" });
+  });
+
+  app.post("/api/settings", async (req, res) => {
+    settings = { ...settings, ...req.body };
+    await persistSettings();
     res.json({ settings, dbStatus: isDBConnected() ? "Connected successfully" : "Not connected" });
   });
 
@@ -843,8 +942,40 @@ async function startServer() {
   app.post("/api/ai/generate", async (req, res) => {
     const { prompt, context } = req.body;
     const response = await generateAIResponse(prompt, context);
+    
+    // Save to history
+    if (!settings.promptHistory) settings.promptHistory = [];
+    settings.promptHistory.unshift({
+        id: uuidv4(),
+        prompt,
+        timestamp: new Date().toISOString()
+    });
+    if (settings.promptHistory.length > 30) {
+        settings.promptHistory = settings.promptHistory.slice(0, 30);
+    }
+    await persistSettings();
+    
     res.json({ result: response });
   });
+
+  app.get("/api/ai/history", (req, res) => {
+    res.json(settings.promptHistory || []);
+  });
+
+  app.delete("/api/ai/history", async (req, res) => {
+    settings.promptHistory = [];
+    await persistSettings();
+    res.json({ success: true });
+  });
+
+  app.delete("/api/ai/history/:id", async (req, res) => {
+    if (settings.promptHistory) {
+        settings.promptHistory = settings.promptHistory.filter((h: any) => h.id !== req.params.id);
+        await persistSettings();
+    }
+    res.json({ success: true });
+  });
+
 
   // --- Vite Middleware ---
   if (process.env.NODE_ENV !== "production") {

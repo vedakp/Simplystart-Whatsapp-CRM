@@ -64,6 +64,8 @@ export async function connectDB(config: any) {
       messageTemplate: DataTypes.TEXT,
       targets: DataTypes.INTEGER,
       status: DataTypes.STRING,
+      image: DataTypes.TEXT,
+      delaySeconds: DataTypes.INTEGER,
       createdAt: DataTypes.STRING
     });
 
@@ -72,6 +74,16 @@ export async function connectDB(config: any) {
       title: DataTypes.STRING,
       content: DataTypes.TEXT,
       updatedAt: DataTypes.STRING
+    });
+    
+    models.Media = sequelize.define('Media', {
+      id: { type: DataTypes.STRING, primaryKey: true },
+      filename: DataTypes.STRING,
+      originalName: DataTypes.STRING,
+      mimetype: DataTypes.STRING,
+      size: DataTypes.INTEGER,
+      url: DataTypes.STRING,
+      createdAt: DataTypes.STRING
     });
     
     models.Appointment = sequelize.define('Appointment', {
