@@ -4,6 +4,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
+import { Ollama } from "ollama";
 
 dotenv.config();
 
@@ -43,8 +44,9 @@ import fsPromises from 'fs/promises';
 
 let settings: any = {
   geminiApiKey: "",
-  ollamaUrl: "http://localhost:11434",
+  ollamaUrl: "https://ollama.com",
   ollamaModel: "llama3",
+  ollamaApiKey: "",
   autoReplyEnabled: false
 };
 
@@ -121,17 +123,27 @@ async function generateAIResponse(prompt: string, systemInstruction?: string): P
     }
   } else if (settings.ollamaUrl && settings.ollamaModel) {
     try {
-      const res = await fetch(`${settings.ollamaUrl}/api/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: settings.ollamaModel,
-          prompt: (systemInstruction ? `System: ${systemInstruction}\n\n` : '') + `User: ${prompt}`,
-          stream: false
-        })
+      const ollamaConfig: any = { host: settings.ollamaUrl };
+      if (settings.ollamaApiKey) {
+        ollamaConfig.headers = {
+          Authorization: `Bearer ${settings.ollamaApiKey}`
+        };
+      }
+      const ollama = new Ollama(ollamaConfig);
+      
+      const messages = [];
+      if (systemInstruction) {
+        messages.push({ role: "system", content: systemInstruction });
+      }
+      messages.push({ role: "user", content: prompt });
+      
+      const response = await ollama.chat({
+        model: settings.ollamaModel,
+        messages,
+        stream: false
       });
-      const data = await res.json();
-      return data.response || "No response generated";
+      
+      return response.message.content || "No response generated";
     } catch (e: any) {
       console.error("Ollama Error:", e);
       return "Error generating response via Ollama.";

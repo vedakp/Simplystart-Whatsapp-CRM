@@ -4,8 +4,9 @@ import { Settings2, Save, Loader2, Key, Bell, Phone, Smartphone, QrCode, Databas
 export default function Settings() {
   const [settings, setSettings] = useState<any>({
     geminiApiKey: "",
-    ollamaUrl: "",
-    ollamaModel: "",
+    ollamaUrl: "https://ollama.com",
+    ollamaModel: "llama3",
+    ollamaApiKey: "",
     autoReplyEnabled: false,
     dbHost: "",
     dbPort: "3306",
@@ -206,7 +207,7 @@ export default function Settings() {
                 value={settings.ollamaUrl} 
                 onChange={e => setSettings({...settings, ollamaUrl: e.target.value})} 
                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
-                placeholder="http://localhost:11434"
+                placeholder="https://ollama.com"
               />
             </div>
             <div>
@@ -219,6 +220,16 @@ export default function Settings() {
                 placeholder="llama3"
               />
             </div>
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">Ollama API Key (Optional)</label>
+            <input 
+              type="password" 
+              value={settings.ollamaApiKey} 
+              onChange={e => setSettings({...settings, ollamaApiKey: e.target.value})} 
+              className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors" 
+              placeholder="Bearer Token or Key for hosted Ollama instances"
+            />
           </div>
         </div>
 
