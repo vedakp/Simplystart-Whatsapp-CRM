@@ -55,30 +55,11 @@ export default function Layout() {
       )}>
         <div className="h-20 flex items-center px-6 border-b border-slate-200 dark:border-white/5">
           <div className="flex items-center">
-            {/* Show company logo if uploaded to public/logo.png, otherwise fallback */}
             <img 
               src="/logo.png" 
               alt="SimplyStart" 
-              className="h-10 w-auto"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                if (e.currentTarget.nextElementSibling) {
-                  (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
-                }
-              }}
+              className="h-auto w-40 object-contain"
             />
-            <div className="hidden items-center">
-              <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-3">
-                <path d="M 45 15 L 10 50 L 45 85 L 60 70 L 40 50 L 60 30 Z" fill="#ff6666" />
-                <path d="M 40 30 L 60 50 L 40 70 L 55 85 L 90 50 L 55 15 Z" fill="#ff6666" />
-              </svg>
-              <div className="flex flex-col font-sans justify-center leading-[0.95] tracking-[0.1em]">
-                 <span className="text-[17px] font-black text-[#151D2A] dark:text-white uppercase leading-none">Simply</span>
-                 <span className="text-[17px] font-black text-[#151D2A] dark:text-white uppercase leading-none pb-[2px]">
-                   Start<span className="text-[#ff6666] font-black ml-[2px]">&gt;</span>
-                 </span>
-              </div>
-            </div>
           </div>
           <button className="ml-auto md:hidden" onClick={() => setIsSidebarOpen(false)}>
             <Lucide.X className="w-5 h-5 text-slate-400 hover:text-slate-900 dark:hover:text-white" />
